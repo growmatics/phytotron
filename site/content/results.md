@@ -25,7 +25,7 @@ All numbers on this page are simulated. They come from one run of the Phytotron 
 
 {{verdict_table}}
 
-No controller passes the gate, so the ranking holds only the incumbent, as the reference. The incumbent's net value is higher than the MPC's at every level of model error. The incumbent is the reference, not a contestant: 4 seasons cannot show a failure rate below 5%.
+No controller passes the gate, so the ranking holds only the incumbent, as the reference. The incumbent's net value is higher than the MPC's at every level of model error. The incumbent is the reference, not an arm the gate judges: 4 seasons cannot show a failure rate below 5%.
 
 ## The MPC by model error
 

@@ -34,7 +34,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 import time
 from collections.abc import Callable
@@ -42,115 +41,26 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from phytotron.benchmark import hardware_stamp
+from phytotron.arms import ARMS
 from phytotron.config import default_config_path, load_config
-from phytotron.controllers.registry import ArmSpec, parse_specs, record_specs, specs_from_record
+from phytotron.controllers.registry import ArmSpec, parse_specs, specs_from_record
 from phytotron.envs.glg2 import paths_from_env
-from phytotron.runner import (
-    ARMS,
-    Paths,
-    Task,
-    arm_settings,
-    build_tasks,
-    file_sha256,
-    input_hashes,
+from phytotron.grid import Task, build_tasks
+from phytotron.provenance import ResumeRefused, check_resume, git_output, run_record
+from phytotron.records import (
+    FailureRecord,
+    Record,
     load_records,
-    package_versions,
     pending,
-    rescore_records,
-    run_task_safe,
     save_record,
-    summarize,
     with_attempts,
 )
-from phytotron.scenarios import GLG2_COMMIT, glg2_config_dir
-
-
-def _git(repo: Path, *args: str) -> str:
-    try:
-        return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
-
-
-def _glg2_commit(config_dir: Path) -> str:
-    """The simulator commit: the pinned one for the shipped scenario files, else the checkout's."""
-    if Path(config_dir).resolve() == glg2_config_dir().resolve():
-        return GLG2_COMMIT[:7]
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], cwd=config_dir, text=True
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
-
-
-def _run_record(
-    cfg: Any,
-    tasks: list[Task],
-    args: argparse.Namespace,
-    paths: Paths,
-    custom: dict[str, ArmSpec] | None = None,
-) -> dict[str, Any]:
-    full_days = cfg.generalisation.season_length_days
-    repo = args.config.parent.parent
-    return {
-        "git_commit": _git(repo, "rev-parse", "--short", "HEAD"),
-        "git_dirty": bool(_git(repo, "status", "--porcelain")),
-        "config_sha256": file_sha256(args.config),
-        "testbed": cfg.testbed["release"],
-        "glg2_checkout_commit": _glg2_commit(Path(paths.glg2_config_dir)),
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "timezone": time.strftime("%Z (UTC%z)"),
-        "workers": args.workers,
-        "packages": package_versions(),
-        "inputs_sha256": input_hashes(cfg, paths, sorted({t.year for t in tasks})),
-        "arm_settings": arm_settings(cfg, paths, custom),
-        "custom_arms": record_specs(custom or {}),
-        "season_days": tasks[0].season_days if tasks else full_days,
-        "smoke": bool(tasks) and tasks[0].season_days < full_days,
-        "grid": {
-            "arms": args.arms,
-            "years": sorted({t.year for t in tasks}),
-            "mismatch_levels": sorted({t.mismatch for t in tasks}),
-            "seeds": sorted({t.seed for t in tasks}),
-            "seasons": len(tasks),
-        },
-        "hardware": hardware_stamp(),
-    }
+from phytotron.season import Paths, run_task_safe
+from phytotron.summary import rescore_records, summarize
 
 
 def _verdicts(gate: dict[str, bool] | None) -> str:
     return "n/a" if gate is None else "/".join("pass" if v else "fail" for v in gate.values())
-
-
-def _refuse_changed_code(
-    launch: dict[str, Any], config: Path, custom: dict[str, ArmSpec] | None = None
-) -> None:
-    """Stop a resume whose code, config or user controllers differ from the launch."""
-    repo = config.parent.parent
-    now = {
-        "git_commit": _git(repo, "rev-parse", "--short", "HEAD"),
-        "config_sha256": file_sha256(config),
-    }
-    changed = [k for k, v in now.items() if launch.get(k) != v]
-    if changed:
-        sys.exit(
-            f"This run was launched with a different {' and '.join(changed)} "
-            f"({launch.get('git_commit')}). Resume it from that commit, or use a new --run-dir."
-        )
-    launched = launch.get("custom_arms") or {}
-    now_custom = record_specs(custom or {})
-    if {k: v["sha256"] for k, v in now_custom.items()} != {
-        k: v.get("sha256") for k, v in launched.items()
-    }:
-        sys.exit(
-            "This run was launched with different user controllers "
-            f"({sorted(launched)}, by file hash). Pass the same --controller specs "
-            "with unchanged code, or use a new --run-dir."
-        )
-    if _git(repo, "status", "--porcelain"):
-        print("Warning: the working tree has uncommitted changes.")
 
 
 def _num(value: float | None, spec: str) -> str:
@@ -276,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
     return run(build_parser().parse_args(argv))
 
 
-def custom_arms(args: argparse.Namespace) -> dict[str, ArmSpec]:
+def registered_arms(args: argparse.Namespace) -> dict[str, ArmSpec]:
     """The user controllers from the command line, or a clean error."""
     try:
         return parse_specs(
@@ -292,7 +202,7 @@ def custom_arms(args: argparse.Namespace) -> dict[str, ArmSpec]:
 def run(
     args: argparse.Namespace,
     *,
-    season_runner: Callable[[Task, Paths], dict[str, Any]] | None = None,
+    season_runner: Callable[[Task, Paths], Record] | None = None,
     executor: Any = None,
 ) -> int:
     """The ``run`` command. ``season_runner`` and ``executor`` exist for the tests: the
@@ -304,10 +214,10 @@ def run(
     if args.rescore:
         launch = json.loads((run_dir / "run_record.json").read_text())
         records = rescore_records(load_records(run_dir), cfg, specs_from_record(launch))
-        commit = _git(args.config.parent.parent, "rev-parse", "--short", "HEAD")
+        commit = git_output(args.config.parent.parent, "rev-parse", "--short", "HEAD")
         return _write_summary(run_dir, f"summary-rescored-{commit}.json", records, cfg)
-    custom = custom_arms(args)
-    args.arms = args.arms or [*ARMS, *custom]
+    registered = registered_arms(args)
+    args.arms = args.arms or [*ARMS, *registered]
 
     config_dir, weather_dir = paths_from_env(os.environ)
     paths = Paths(str(args.config), str(config_dir), str(weather_dir))
@@ -319,7 +229,7 @@ def run(
             mismatch_levels=args.mismatch,
             seeds=args.seeds,
             season_days=args.season_days,
-            custom=custom,
+            registered=registered,
         )
     except ValueError as err:
         sys.exit(str(err))
@@ -331,9 +241,16 @@ def run(
     grid_file.write_text(json.dumps(grid, indent=1))
     record_file = run_dir / "run_record.json"
     if record_file.exists():  # the launch record survives resumes
-        _refuse_changed_code(json.loads(record_file.read_text()), args.config, custom)
+        try:
+            warning = check_resume(json.loads(record_file.read_text()), args.config, registered)
+        except ResumeRefused as err:
+            sys.exit(str(err))
+        if warning:
+            print(warning)
     else:
-        record = _run_record(cfg, tasks, args, paths, custom)
+        record = run_record(
+            cfg, tasks, paths, registered, config=args.config, arms=args.arms, workers=args.workers
+        )
         record_file.write_text(json.dumps(record, indent=2))
 
     done = load_records(run_dir)
@@ -346,12 +263,12 @@ def run(
         futures = {pool.submit(season_runner, t, paths): t for t in todo}
         for count, future in enumerate(as_completed(futures), 1):
             task = futures[future]
-            record = with_attempts(future.result(), done.get(task.key))
-            save_record(run_dir, task, record)
+            outcome = with_attempts(future.result(), done.get(task.key))
+            save_record(run_dir, task, outcome)
             status = (
-                f"FAILED at {record['stage']}: {record['error']}"
-                if "error" in record
-                else f"net {record['net_economic_value']:+.4f}"
+                f"FAILED at {outcome.stage}: {outcome.error}"
+                if isinstance(outcome, FailureRecord)
+                else f"net {outcome.net_economic_value:+.4f}"
             )
             minutes = (time.time() - start) / 60
             print(f"  [{count}/{len(todo)}] {task.arm} {task.label} s{task.seed}: {status}"

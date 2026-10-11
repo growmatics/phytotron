@@ -1,4 +1,4 @@
-"""A minimal custom controller: a thermostat with ventilation, run for one simulated season.
+"""A minimal registered controller: a thermostat with ventilation, run for one simulated season.
 
 This is the template for ``docs/own-controller.md``. Copy it, change ``act``, and run:
 
@@ -72,7 +72,7 @@ def main() -> None:
     result = run_season_controller(env, Thermostat(), seed=0)
     print(f"thermostat, simulated season, {gen.location} {args.year}, {days} days")
     print(f"  net economic value: {result.net_economic_value:+.3f} EUR/m2")
-    step_hours = float(cfg.raw["episode"]["timestep_seconds"]) / 3600.0
+    step_hours = cfg.episode.step_hours
     for name, exc in result.exceedances.items():
         print(f"  {name:>11}: {float((exc > 0).sum()) * step_hours:6.1f} h outside the band")
 

@@ -4,7 +4,7 @@
 
 Developed and maintained by [Growmatics](https://growmatics.ai).
 
-> Status: 0.1.0, the first public version (11 October 2026). The benchmark core and the reference controllers run and reproduce our recorded results exactly; see [Validation](docs/validation.md). Interfaces may change between minor versions until 1.0; every change is in the [changelog](CHANGELOG.md).
+> Status: 0.2.0 (11 October 2026), the first public version restructured for readers of the code. The benchmark core and the reference controllers run and reproduce our recorded results exactly; see [Validation](docs/validation.md). Interfaces may change between minor versions until 1.0; every change is in the [changelog](CHANGELOG.md).
 
 ## What it is
 

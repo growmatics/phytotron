@@ -21,7 +21,8 @@ import pytest
 
 from phytotron.config import load_config
 from phytotron.controllers.registry import specs_from_record
-from phytotron.runner import load_records, rescore_records, summarize
+from phytotron.records import FailureRecord, load_records
+from phytotron.summary import rescore_records, summarize
 
 ROOT = Path(__file__).resolve().parent.parent
 CFG = load_config(ROOT / "configs" / "benchmark.yaml")
@@ -94,6 +95,15 @@ def test_golden_run_summarises_to_the_stored_summary() -> None:
     assert _differences(stored, summary) == []
 
 
+def test_golden_summary_text_is_reproduced_byte_for_byte() -> None:
+    # The value comparison above tolerates key order and formatting; this one does not,
+    # so a move or a rewrite on the summary path cannot change the file silently.
+    records = load_records(GOLDEN)
+    launch = json.loads((GOLDEN / "run_record.json").read_text())
+    text = json.dumps(summarize(records, CFG, launch), indent=1) + "\n"
+    assert text == (GOLDEN / "summary.json").read_text()
+
+
 def test_golden_run_exercises_every_rule_kind_and_both_record_paths() -> None:
     # The fixture must stay a real test of the crop gate: each rule kind broken by at
     # least one season, one season without traces, one failure with an attempt history.
@@ -113,7 +123,7 @@ def test_golden_run_exercises_every_rule_kind_and_both_record_paths() -> None:
     counted = {f["stage"]: f["counted"] for f in summary["record"]["failed_seasons"]}
     assert counted == {"season": True, "setup": False}
     records = load_records(GOLDEN)
-    attempts = [len(r["attempts"]) for r in records.values() if "error" in r]
+    attempts = [len(r.attempts) for r in records.values() if isinstance(r, FailureRecord)]
     assert sorted(attempts) == [0, 1]
 
 

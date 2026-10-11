@@ -16,7 +16,7 @@ import yaml
 
 from phytotron.config import BenchmarkConfig
 from phytotron.controllers.base import NominalParameters
-from phytotron.controllers.mpc import PhysicsOnlyMPC
+from phytotron.controllers.mpc import MpcSettings, PhysicsOnlyMPC
 from phytotron.controllers.rule_based import RuleBasedIncumbent
 from phytotron.mismatch import perturb_params
 
@@ -31,19 +31,9 @@ def incumbent_params(glg2_config_dir: str | Path) -> dict[str, Any]:
     return dict(yaml.safe_load(path.read_text())["TomatoEnv"])
 
 
-def mpc_settings(cfg: BenchmarkConfig) -> dict[str, Any]:
-    """The MPC arm's constructor settings, except the nominal model."""
-    if cfg.mpc is None or cfg.economic is None:
-        raise ValueError("configs/benchmark.yaml needs the mpc and economic blocks")
-    band = cfg.raw["constraints"]
-    return {
-        "horizon": cfg.mpc.horizon_steps,
-        "dt": float(cfg.raw["episode"]["timestep_seconds"]),
-        "objective": "economic",
-        "economic": cfg.economic,
-        "climate_bounds": {k: tuple(band[k]) for k in ("co2_ppm", "air_temp_c", "rh_percent")},
-        "terminal_weight": cfg.mpc.terminal_weight,
-    }
+def mpc_settings(cfg: BenchmarkConfig) -> MpcSettings:
+    """The MPC arm's settings, except the nominal model (see :class:`MpcSettings`)."""
+    return MpcSettings.from_config(cfg)
 
 
 def build_controller(
@@ -65,5 +55,5 @@ def build_controller(
     if name == "physics_mpc":
         true = {str(i): float(v) for i, v in enumerate(np.array(env.p).flatten())}
         nominal = NominalParameters(perturb_params(true, mismatch, seed))
-        return PhysicsOnlyMPC(nominal, **mpc_settings(cfg))
+        return PhysicsOnlyMPC(nominal, mpc_settings(cfg))
     raise ValueError(f"unknown arm {name!r}; available: {list(ARMS)}")

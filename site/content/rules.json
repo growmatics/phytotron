@@ -1,7 +1,7 @@
 {
   "generated_from": {
     "config": "configs/benchmark.yaml",
-    "config_sha256": "2764f38daef79949a88919a96be0913572cf3a5cb2a9be8624298b5da3495a09",
+    "config_sha256": "7fcb51da74081dc6249d5a32439993a50b934d5ba71f74b0bfa243ae5a916efd",
     "rules_status": "fixed",
     "protocol_version": 2
   },

@@ -82,7 +82,7 @@ The incumbent spends 488 hours per season above 85 % RH and still breaks no humi
 
 - Not a calibrated result: the scenario is a simulation, not a model of any named greenhouse.
 - Not a verdict on MPC as a method: this MPC plans against the band, with a 1-hour horizon and no knowledge of the crop rules. An MPC that plans against the rules is a later arm.
-- Not powered for the incumbent: 4 seasons cannot pass a 5 % gate. The incumbent is the reference, not a contestant.
+- Not powered for the incumbent: 4 seasons cannot pass a 5 % gate. The incumbent is the reference, not an arm the gate judges.
 
 ## Files
 

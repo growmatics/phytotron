@@ -13,11 +13,12 @@ CFG = load_config(Path(__file__).resolve().parent.parent / "configs" / "benchmar
 
 def test_mpc_settings_come_from_config() -> None:
     settings = mpc_settings(CFG)
-    assert settings["horizon"] == CFG.mpc.horizon_steps
-    assert settings["terminal_weight"] == CFG.mpc.terminal_weight
-    assert settings["dt"] == float(CFG.raw["episode"]["timestep_seconds"])
-    assert settings["climate_bounds"]["rh_percent"] == tuple(CFG.raw["constraints"]["rh_percent"])
-    assert settings["economic"] is CFG.economic
+    assert settings.objective == "economic"
+    assert settings.horizon == CFG.mpc.horizon_steps
+    assert settings.dt == float(CFG.episode.timestep_seconds)
+    assert settings.climate_bounds is not None
+    assert settings.climate_bounds["rh_percent"] == CFG.constraints.rh_percent
+    assert settings.economic is CFG.economic
 
 
 def test_incumbent_params_read_from_rule_based_yml(tmp_path: Path) -> None:

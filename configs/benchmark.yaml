@@ -19,7 +19,7 @@ testbed:                    # read by: phytotron.commands.run_benchmark (the run
   python: ">=3.11"
   crop: tomato              # single-crop; generalisation is NOT across crop
 
-episode:                    # read by: phytotron.config (validate), phytotron.runner, phytotron.arms, phytotron.envs.glg2, site/build_rules.py
+episode:                    # read by: phytotron.config (EpisodeConfig; validate), then phytotron.season, phytotron.summary, phytotron.arms, phytotron.envs.glg2, site/build_rules.py through it
   crop_days: 60
   steps: 5760               # control steps; the runner records 5761 states (initial state + one per step)
   timestep_seconds: 900
@@ -32,19 +32,19 @@ controllers:                # documentation only: the four comparators (arms 1 t
 
 mpc:                        # read by: phytotron.config, phytotron.arms (mpc_settings). The physics-only economic MPC arm
   horizon_steps: 4          # x timestep_seconds = about one hour ahead
-  terminal_weight: 0.0      # no terminal cost; it is the RL-in-MPC arm's hook
+  terminal_weight: 0.0      # planned: the RL-in-MPC arm's terminal cost; must be 0 in this version (load_config refuses another value)
 
-objective:                  # documentation only: what phytotron.runner and phytotron.benchmark implement
+objective:                  # documentation only: what phytotron.summary and phytotron.benchmark implement
   ranking: net_economic_value        # revenue minus energy and resource cost (NOT energy alone)
   violations_handling: feasibility_gate   # native reward penalty is REMOVED from the objective and moved to the gate
 
-constraints:                # read by: phytotron.arms (the MPC's climate bounds); gate.classes drive the gate
+constraints:                # read by: phytotron.config (ConstraintsConfig), then phytotron.arms (the MPC's climate bounds) and phytotron.envs.glg2; gate.classes drive the gate
   co2_ppm: [300, 1600]      # class: physical
   air_temp_c: [15, 34]      # class: physical
   rh_percent: [50, 85]      # ceiling (85) -> soft crop-health (disease proxy)
   hard_equipment: actuator saturation to [0,1] is enforced by the simulator; the lamp rule is class `lamp` in gate.classes   # documentation only
 
-gate:                       # read by: phytotron.config (GateConfig), phytotron.benchmark, phytotron.runner, site/build_rules.py
+gate:                       # read by: phytotron.config (GateConfig), phytotron.benchmark, phytotron.summary, site/build_rules.py
   trial_unit: season        # documentation only: NOT timestep (autocorrelated); the gate counts seasons by construction
   epsilon: 0.05             # soft-bound season-level violation tolerance
   delta: 0.05               # confidence (95%)
@@ -106,13 +106,13 @@ gate:                       # read by: phytotron.config (GateConfig), phytotron.
     lamp:
       kind: reported         # lamp use after 20:00
 
-pareto:                     # documentation only: the choices phytotron.runner._pareto implements
+pareto:                     # documentation only: the choices phytotron.summary._pareto implements
   axes: [net_economic_value_heldout, online_cost]
   reference_point: anti_ideal             # worst value on each axis (the incumbent is cost-optimal and cannot anchor HV); improvement-over-incumbent = HV(front) - HV(incumbent)
   normalization: minmax_per_axis_over_gate_passers
   reported_per: mismatch_level            # zero-mismatch front is a labelled inverse-crime reference only
 
-mismatch:                   # read by: phytotron.runner (sweep_magnitudes); the rest documentation only. Inverse-crime defence
+mismatch:                   # read by: phytotron.config (GridConfig: sweep_magnitudes); the rest documentation only. Inverse-crime defence
   physics_arms_receive_ground_truth: false   # arms 3,4 get a NOMINAL model only
   mechanism: greenlight_parameter_sampling   # 208 params; perturb controller nominal vs sim true
   sweep_magnitudes: [0.0, 0.025, 0.05, 0.10, 0.15, 0.20]   # 0.0 = labelled inverse-crime reference (controller model equals the simulator)
@@ -134,10 +134,10 @@ generalisation:             # read by: phytotron.config (location, season_start_
   weather_years_heldout: [2022, 2023, 2024, 2025]
   # planned: crop parameters vary between train and held-out seasons; today only the weather year varies
 
-checks:                     # read by: phytotron.runner (season_problems). A season that fails a check is a failed season
+checks:                     # read by: phytotron.config (ChecksConfig), then phytotron.season (season_problems). A season that fails a check is a failed season
   action_tolerance: 1.0e-6  # a control may leave its range by at most this (solver round-off)
 
-reporting:                  # read by: phytotron.runner (seeds_per_condition); distributions documentation only (planned)
+reporting:                  # read by: phytotron.config (GridConfig: seeds_per_condition); distributions documentation only (planned)
   seeds_per_condition: 5               # seeds 0..4, for RL training and mismatch draws
   distributions: mean_and_sd           # per arm and per mismatch level; planned: bootstrap CIs and performance profiles
 

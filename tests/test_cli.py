@@ -6,7 +6,7 @@ import pytest
 
 from phytotron import config as config_module
 from phytotron.cli import COMMANDS, build_parser, main
-from phytotron.commands.run_benchmark import custom_arms
+from phytotron.commands.run_benchmark import registered_arms
 from phytotron.config import default_config_path
 
 
@@ -65,9 +65,9 @@ def test_run_parses_user_controller_options() -> None:
         ]
     )
     assert args.arms is None  # default: reference arms plus every --controller
-    custom = custom_arms(args)
-    assert set(custom) == {"still", "mine"}
-    assert custom["mine"].model_based and not custom["still"].model_based
+    registered = registered_arms(args)
+    assert set(registered) == {"still", "mine"}
+    assert registered["mine"].model_based and not registered["still"].model_based
     bad = build_parser().parse_args(["run", "--run-dir", "x", "--controller", "incumbent=m:C"])
     with pytest.raises(SystemExit, match="built-in"):
-        custom_arms(bad)
+        registered_arms(bad)

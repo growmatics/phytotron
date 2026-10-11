@@ -8,4 +8,4 @@ Terms used throughout the code ("arm 1" to "arm 4", "inverse crime") are defined
 glossary in ``docs/README.md``.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

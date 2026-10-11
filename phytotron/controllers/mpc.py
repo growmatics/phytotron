@@ -26,12 +26,14 @@ The full recipe, its provenance, and the references behind the bracketed keys ar
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
 
-from phytotron.config import EconomicConfig
+from phytotron.config import BenchmarkConfig, EconomicConfig
 from phytotron.controllers.base import (
     ControlContext,
     NominalParameters,
@@ -152,87 +154,90 @@ def radau_coefficients(degree: int) -> tuple[NDArray[np.float64], NDArray[np.flo
     return coll, end
 
 
-class PhysicsOnlyMPC(PhysicsController):
-    """Direct-collocation economic MPC over the GreenLight ODE.
+OBJECTIVES = ("economic", "energy_band")
 
-    Args:
-        nominal_params: the controller's model parameters (never the sim's truth).
-        horizon: number of control intervals.
-        degree: collocation polynomial degree (Radau).
-        dt: control interval [s].
-        prices: economic coefficients; defaults to the GreenLight reward config.
-        temp_bounds: soft air-temperature bounds [degC] (penalized, not hard).
+
+@dataclass(frozen=True)
+class MpcSettings:
+    """Everything the MPC is built with, except its nominal model.
+
+    ``objective`` has no default: every construction says whether it runs the
+    benchmark's economic objective (the GreenLight-Gym2 reward in EPI form: fruit
+    revenue minus operating costs minus CO2, temperature and RH penalties, the objective
+    that reproduces the study) or the ``energy_band`` placeholder (a modest energy cost
+    plus a soft air-temperature band, kept for solver diagnosis). The benchmark builds
+    its MPC with :meth:`from_config`. The solver and discretisation choices are
+    explained in docs/mpc.md.
     """
+
+    objective: str
+    horizon: int = 6  # control intervals
+    degree: int = 2  # Radau collocation degree per interval
+    dt: float = 900.0  # control interval [s]
+    prices: Mapping[str, float] | None = (
+        None  # energy_band only; economic prices come from economic
+    )
+    temp_bounds: tuple[float, float] = (15.0, 34.0)  # energy_band: the soft band [C]
+    w_energy: float = 1.0  # energy_band weights: the band penalty must dominate the energy cost
+    w_temp: float = 50.0
+    w_fruit: float = 0.0
+    delta_u_max: float = 0.1  # largest control change per interval
+    u_init: tuple[float, ...] | None = None  # None: U_INIT
+    state_scale: tuple[float, ...] | None = None  # None: STATE_SCALE
+    linear_solver: str = "mumps"  # the one shipped with the CasADi wheel; deterministic
+    expand: bool = True  # MX to SX for faster evaluation
+    jit: bool = False  # compile the NLP functions to C once
+    economic: EconomicConfig | None = None
+    climate_bounds: Mapping[str, tuple[float, float]] | None = None
+    max_iter: int = 150  # IPOPT iteration cap
+    verbose: bool = False
+
+    def __post_init__(self) -> None:
+        if self.objective not in OBJECTIVES:
+            raise ValueError(f"objective must be one of {OBJECTIVES}, got {self.objective!r}")
+        if self.objective == "economic" and (self.economic is None or self.climate_bounds is None):
+            raise ValueError("objective='economic' requires economic= and climate_bounds=")
+
+    @classmethod
+    def from_config(cls, cfg: BenchmarkConfig) -> MpcSettings:
+        """The benchmark's MPC: the economic objective with the config's horizon, step,
+        prices and simulator band."""
+        if cfg.mpc is None or cfg.economic is None:
+            raise ValueError("configs/benchmark.yaml needs the mpc and economic blocks")
+        return cls(
+            objective="economic",
+            horizon=cfg.mpc.horizon_steps,
+            dt=float(cfg.episode.timestep_seconds),
+            economic=cfg.economic,
+            climate_bounds=cfg.constraints.bounds(),
+        )
+
+
+class PhysicsOnlyMPC(PhysicsController):
+    """Direct-collocation economic MPC over the GreenLight ODE, built from
+    :class:`MpcSettings` and a nominal model (never the simulator's own parameters)."""
 
     control_kind = "absolute"  # outputs absolute controls -> harness uses step_raw_control
 
-    def __init__(
-        self,
-        nominal_params: NominalParameters,
-        *,
-        horizon: int = 6,
-        degree: int = 2,  # Radau degree; 2 tracks the CVODES plant to <1% at ~2x the
-        # speed of degree 3 over a 900 s step (degree 1 is too coarse: ~10% on tAir).
-        # See the degree benchmark in docs/mpc.md.
-        dt: float = 900.0,
-        prices: dict[str, float] | None = None,
-        temp_bounds: tuple[float, float] = (15.0, 34.0),
-        w_energy: float = 1.0,
-        w_temp: float = 50.0,
-        w_fruit: float = 0.0,
-        delta_u_max: float = 0.1,
-        u_init: NDArray[np.float64] | None = None,
-        state_scale: NDArray[np.float64] = STATE_SCALE,
-        linear_solver: str = "mumps",
-        expand: bool = True,
-        jit: bool = False,
-        objective: str = "energy_band",
-        economic: EconomicConfig | None = None,
-        climate_bounds: dict[str, tuple[float, float]] | None = None,
-        max_iter: int = 150,
-        verbose: bool = False,
-        terminal_weight: float = 0.0,
-    ) -> None:
+    def __init__(self, nominal_params: NominalParameters, settings: MpcSettings) -> None:
         super().__init__(nominal_params)
-        # Terminal cost weight (rho, van Laatum Eq 18). When > 0 the OCP adds an L1
-        # terminal cost rho * sum_i |z_i(N) - z_term_i| in scaled coordinates (STATE_SCALE
-        # is the per-state normalisation), pulling the horizon end toward a target state
-        # supplied at solve time -- the mechanism by which arm 4 injects the RL rollout's
-        # longer-horizon economics into the short-horizon MPC. 0 = plain arm 3.
-        self.terminal_weight = terminal_weight
-        # Objective mode: "energy_band" is the stabilising placeholder (modest energy
-        # cost + a soft air-temperature band); "economic" is the GLG2 GreenhouseReward
-        # EPI form (fruit revenue - operating costs - CO2/temp/RH penalties), the arm-3
-        # objective that reproduces van Laatum's standalone MPC (L5). The placeholder is
-        # kept as the default: it rarely fails and is useful for solver validation.
-        if objective not in ("energy_band", "economic"):
-            raise ValueError(f"objective must be 'energy_band' or 'economic', got {objective!r}")
-        if objective == "economic" and (economic is None or climate_bounds is None):
-            raise ValueError("objective='economic' requires economic= and climate_bounds=")
-        self.objective = objective
-        self.economic = economic
-        self.climate_bounds = climate_bounds
-        self.max_iter = max_iter  # IPOPT iteration cap (bounds worst-case latency)
-        self.verbose = verbose  # IPOPT print_level 5 for solver diagnosis
-        self.horizon = horizon
-        self.degree = degree
-        self.dt = dt
-        # IPOPT's KKT linear solver (the per-iteration cost driver). MUMPS ships with
-        # every CasADi wheel and is deterministic (reproducible benchmark numbers);
-        # SPRAL is open-source and can be slightly faster (Waechter & Biegler 2006
-        # [wachter2006ipopt]). HSL (ma27/ma57/ma86) is NOT linked in the pip wheel.
-        # Picked by the solver benchmark in docs/mpc.md.
-        self.linear_solver = linear_solver
-        # expand: flatten the Opti MX graph to SX for faster function/derivative
-        # evaluation. jit: compile the NLP functions to C once (amortized over a
-        # multi-thousand-step season). Both are CasADi options [andersson2019casadi].
-        self.expand = expand
-        self.jit = jit
-        # Prices are the single source of truth in benchmark.yaml, reaching here via the economic
-        # config for the economic objective (the benchmark path). DEFAULT_PRICES is only a fallback
-        # for the energy_band objective / bare construction, never the live benchmark value.
-        if prices is not None:
-            self.prices = dict(prices)
+        self.settings = settings
+        self.objective = settings.objective
+        self.economic = settings.economic
+        self.climate_bounds = settings.climate_bounds
+        self.max_iter = settings.max_iter  # IPOPT iteration cap (bounds worst-case latency)
+        self.verbose = settings.verbose  # IPOPT print_level 5 for solver diagnosis
+        self.horizon = settings.horizon
+        self.degree = settings.degree
+        self.dt = settings.dt
+        self.linear_solver = settings.linear_solver
+        self.expand = settings.expand
+        self.jit = settings.jit
+        # Prices are the single source of truth in benchmark.yaml, reaching here via the
+        # economic config for the economic objective (the benchmark path). DEFAULT_PRICES is
+        # only a fallback for the energy_band objective, never the live benchmark value.
+        if settings.prices is not None:
+            self.prices = dict(settings.prices)
         elif self.economic is not None:
             self.prices = {
                 "fruit": self.economic.fruit_price,
@@ -242,36 +247,34 @@ class PhysicsOnlyMPC(PhysicsController):
             }
         else:
             self.prices = dict(DEFAULT_PRICES)
-        self.temp_bounds = temp_bounds
-        # Objective weights. The climate-band penalty (w_temp) must dominate the
-        # energy cost (w_energy) so a short-horizon MPC still heats when cold
-        # instead of starving the crop. w_fruit is a (myopic) short-horizon crop
-        # reward, off by default; the long-horizon value is arm 4's (RL-MPC) job.
-        self.w_energy = w_energy
-        self.w_temp = w_temp
-        self.w_fruit = w_fruit
-        self.delta_u_max = delta_u_max
-        self._u_init = np.asarray(u_init, dtype=float) if u_init is not None else U_INIT.copy()
+        self.temp_bounds = settings.temp_bounds
+        self.w_energy = settings.w_energy
+        self.w_temp = settings.w_temp
+        self.w_fruit = settings.w_fruit
+        self.delta_u_max = settings.delta_u_max
+        self._u_init = (
+            np.asarray(settings.u_init, dtype=float)
+            if settings.u_init is not None
+            else U_INIT.copy()
+        )
         self._u_prev = self._u_init.copy()
-        self.scale = np.asarray(state_scale, dtype=float)
+        self.scale = np.asarray(
+            STATE_SCALE if settings.state_scale is None else settings.state_scale, dtype=float
+        )
         self._params_vec = np.asarray(list(nominal_params.values.values()), dtype=float)
         self._warm: dict | None = None
-        self._C, self._D = radau_coefficients(degree)
+        self._C, self._D = radau_coefficients(settings.degree)
         # The parametric NLP is built once (lazily, on the first solve) and reused:
-        # rebuilding the 28-state symbolic ODE + collocation graph every step is the
-        # dominant cost. State, previous control, and the forecast are parameters.
-        # This is the standard CasADi Opti pattern for MPC (Andersson et al. 2019
-        # [andersson2019casadi]); see docs/mpc.md.
+        # rebuilding the symbolic ODE and collocation graph every step is the dominant
+        # cost. State, previous control and the forecast are parameters (docs/mpc.md).
         self._opti: Any = None  # ca.Opti, built lazily; casadi is stubless
         self._built_nd: int | None = None
-        self._p_xterm: Any = None  # terminal-target parameter (arm 4); None if terminal_weight=0
         self._x_nodes: list = []  # interval-end state variables, for prediction readout
         self._model: Any = None  # the one-interval prediction function, built on first use
         self._last_pred: dict | None = None  # {"x": [...unscaled states...], "u": [...]}
-        # Per-solve outcome tally: a deployment-reliability metric. ``clean`` = IPOPT
-        # converged; ``salvage`` = non-optimal but its last iterate was a usable approximate
-        # optimum; ``hold`` = iterate unusable, repeated the last control (the only true
-        # degradation). The benchmark reports solve-success = (clean+salvage)/total per arm.
+        # Per-solve outcome tally: ``clean`` = IPOPT converged; ``salvage`` = non-optimal
+        # but its last iterate was usable; ``hold`` = unusable, the last control repeated.
+        # The benchmark reports solve success = (clean + salvage) / total per arm.
         self.solve_stats: dict[str, int] = {"clean": 0, "salvage": 0, "hold": 0}
 
     def reset(self, seed: int = 0) -> None:
@@ -378,18 +381,59 @@ class PhysicsOnlyMPC(PhysicsController):
 
         Initial state, previous control, and the per-interval forecast are Opti
         *parameters*, so a step changes only their values, not the symbolic graph.
-        The nominal parameters are baked in as constants (they never change).
+        The nominal parameters are baked in as constants (they never change). The order
+        in which variables are created is part of the problem IPOPT sees and must not
+        change: control, collocation states and the interval-end state, then the stage
+        cost's slacks, interval by interval.
         """
+        import casadi as ca
+
+        s = self.scale
+        nx, nu = s.size, 6
+        f_scaled = self._dynamics(nd)
+        opti = ca.Opti()
+        p_x0 = opti.parameter(nx)  # initial state (scaled)
+        p_uprev = opti.parameter(nu)  # control applied before this horizon
+        p_d = [opti.parameter(nd) for _ in range(self.horizon)]  # forecast per interval
+        cost = 0.0
+        controls: list = []
+        seed_states: list = []  # every state variable, seeded to x0 on a cold start
+        x_nodes: list = []  # interval-end states, for the prediction readout
+        xk = p_x0  # stage-0 state is the parameter itself (no extra variable)
+        prev_u = p_uprev
+        for k in range(self.horizon):
+            uk = opti.variable(nu)
+            opti.subject_to(opti.bounded(0, uk, 1))
+            opti.subject_to(opti.bounded(-self.delta_u_max, uk - prev_u, self.delta_u_max))
+            prev_u = uk
+            controls.append(uk)
+            xn, states = self._collocation_constraints(opti, f_scaled, xk, uk, p_d[k])
+            seed_states.extend(states)
+            x_nodes.append(xn)
+            cost += self._stage_cost(opti, uk, xn)
+            xk = xn
+        cost += self._crop_reward(p_x0, xk)
+        opti.minimize(cost)
+        opti.solver("ipopt", self._solver_options())
+        self._opti = opti
+        self._p_x0, self._p_uprev, self._p_d = p_x0, p_uprev, p_d
+        self._u_first = controls[0]
+        self._controls = controls
+        self._seed_states = seed_states
+        self._x_nodes = x_nodes
+        self._built_nd = nd
+
+    def _dynamics(self, nd: int) -> Any:  # pragma: no cover - integration (needs gl_gym)
+        """The scaled, domain-safe GreenLight ODE as a CasADi function of (z, u, d)."""
         import casadi as ca
         from gl_gym.environments.models.ode import ODE
 
         s = self.scale
-        nx, nu = s.size, 6
-        lb, ub = _state_box(nx)
+        nx = s.size
         z_sym = ca.SX.sym("z", nx)
-        u_sym = ca.SX.sym("u", nu)
+        u_sym = ca.SX.sym("u", 6)
         d_sym = ca.SX.sym("d", nd)
-        f_scaled = ca.Function(
+        return ca.Function(
             "f",
             [z_sym, u_sym, d_sym],
             [
@@ -398,145 +442,100 @@ class PhysicsOnlyMPC(PhysicsController):
             ],
         )
 
-        opti = ca.Opti()
-        p_x0 = opti.parameter(nx)  # initial state (scaled)
-        p_uprev = opti.parameter(nu)  # control applied before this horizon
-        p_d = [opti.parameter(nd) for _ in range(self.horizon)]  # forecast per interval
-        p_xterm = opti.parameter(nx) if self.terminal_weight > 0.0 else None  # RL terminal target
-        cost = 0.0
-        controls: list = []
-        seed_states: list = []  # every state variable, seeded to x0 on a cold start
-        x_nodes: list = []  # interval-end states, for the prediction readout
-        xk = p_x0  # stage-0 state is the parameter itself (no extra variable)
-        cfruit_start = p_x0[_I_CFRUIT] * s[_I_CFRUIT]
-        prev_u = p_uprev
-        u_first = None
-        for k in range(self.horizon):
-            uk = opti.variable(nu)
-            opti.subject_to(opti.bounded(0, uk, 1))
-            opti.subject_to(opti.bounded(-self.delta_u_max, uk - prev_u, self.delta_u_max))
-            prev_u = uk
-            controls.append(uk)
-            if k == 0:
-                u_first = uk
-            dk = p_d[k]
-            x_end = self._D[0] * xk
-            coll = [opti.variable(nx) for _ in range(self.degree)]
-            for j in range(1, self.degree + 1):
-                opti.subject_to(opti.bounded(ca.DM(lb), coll[j - 1], ca.DM(ub)))
-                seed_states.append(coll[j - 1])
-                xp = self._C[0, j] * xk
-                for r in range(1, self.degree + 1):
-                    xp = xp + self._C[r, j] * coll[r - 1]
-                opti.subject_to(self.dt * f_scaled(coll[j - 1], uk, dk) == xp)
-                x_end = x_end + self._D[j] * coll[j - 1]
-            xn = opti.variable(nx)
-            opti.subject_to(xn == x_end)
-            seed_states.append(xn)
-            x_nodes.append(xn)
-            if self.objective == "economic":
-                cost += self._economic_stage_cost(opti, uk, xn, s)
-            else:
-                # placeholder: modest energy cost + a smooth soft air-temperature band
-                # via slacks (differentiable, unlike fmax(0,.)^2).
-                t_air = xn[_I_TAIR] * s[_I_TAIR]
-                s_lo = opti.variable()
-                s_hi = opti.variable()
-                opti.subject_to(s_lo >= 0)
-                opti.subject_to(s_hi >= 0)
-                opti.subject_to(t_air >= self.temp_bounds[0] - s_lo)
-                opti.subject_to(t_air <= self.temp_bounds[1] + s_hi)
-                cost += self.w_energy * (uk[0] + uk[1] + uk[4]) + self.w_temp * (s_lo + s_hi)
-            xk = xn
-        # crop reward over the horizon (telescoping sum of fruit growth). In the
-        # economic objective the fruit revenue uses the GreenhouseReward conversion
-        # (mg dry matter -> EUR at the per-kgDW price); the placeholder uses w_fruit.
-        cfruit_gain = xk[_I_CFRUIT] * s[_I_CFRUIT] - cfruit_start
+    def _collocation_constraints(  # pragma: no cover - integration (needs casadi Opti)
+        self, opti: Any, f_scaled: Any, xk: Any, uk: Any, dk: Any
+    ) -> tuple[Any, list[Any]]:
+        """One interval of Radau collocation: the collocation states, their equations and
+        the interval-end state. Returns the end state and every state variable created."""
+        import casadi as ca
+
+        nx = self.scale.size
+        lb, ub = _state_box(nx)
+        x_end = self._D[0] * xk
+        coll = [opti.variable(nx) for _ in range(self.degree)]
+        for j in range(1, self.degree + 1):
+            opti.subject_to(opti.bounded(ca.DM(lb), coll[j - 1], ca.DM(ub)))
+            xp = self._C[0, j] * xk
+            for r in range(1, self.degree + 1):
+                xp = xp + self._C[r, j] * coll[r - 1]
+            opti.subject_to(self.dt * f_scaled(coll[j - 1], uk, dk) == xp)
+            x_end = x_end + self._D[j] * coll[j - 1]
+        xn = opti.variable(nx)
+        opti.subject_to(xn == x_end)
+        return xn, [*coll, xn]
+
+    def _stage_cost(self, opti: Any, uk: Any, xn: Any) -> Any:  # pragma: no cover - integration
+        """One interval's cost under the chosen objective."""
+        s = self.scale
         if self.objective == "economic":
-            assert self.economic is not None  # guaranteed by __init__
-            cost -= 1e-6 * self.economic.price_per_kg_dw * cfruit_gain
-        else:
-            cost -= self.w_fruit * cfruit_gain
-        # terminal cost rho * sum_i |z_i(N) - z_term_i| (van Laatum Eq 18), in scaled
-        # coordinates so STATE_SCALE is the per-state normalisation. L1 via slacks keeps
-        # it differentiable. This pulls the horizon end toward the RL rollout's terminal
-        # state (arm 4); time (index _I_TIME) is excluded (not a controllable target).
-        if self.terminal_weight > 0.0 and p_xterm is not None:
-            for i in range(nx):
-                if i == _I_TIME:
-                    continue
-                s_t = opti.variable()
-                opti.subject_to(s_t >= xk[i] - p_xterm[i])
-                opti.subject_to(s_t >= p_xterm[i] - xk[i])
-                cost += self.terminal_weight * s_t
-        opti.minimize(cost)
-        solver_opts: dict[str, Any] = {
-            "expand": self.expand,  # MX -> SX graph for faster evaluation
+            return self._economic_stage_cost(opti, uk, xn, s)
+        # placeholder: modest energy cost + a smooth soft air-temperature band via slacks
+        # (differentiable, unlike fmax(0,.)^2).
+        t_air = xn[_I_TAIR] * s[_I_TAIR]
+        s_lo = opti.variable()
+        s_hi = opti.variable()
+        opti.subject_to(s_lo >= 0)
+        opti.subject_to(s_hi >= 0)
+        opti.subject_to(t_air >= self.temp_bounds[0] - s_lo)
+        opti.subject_to(t_air <= self.temp_bounds[1] + s_hi)
+        return self.w_energy * (uk[0] + uk[1] + uk[4]) + self.w_temp * (s_lo + s_hi)
+
+    def _crop_reward(self, p_x0: Any, x_last: Any) -> Any:  # pragma: no cover - integration
+        """Minus the fruit grown over the horizon (a telescoping sum of fruit growth): in
+        the economic objective at the per-kg-dry-weight price (the GreenhouseReward
+        conversion, mg dry matter to EUR), in the placeholder with ``w_fruit``."""
+        s = self.scale
+        cfruit_gain = x_last[_I_CFRUIT] * s[_I_CFRUIT] - p_x0[_I_CFRUIT] * s[_I_CFRUIT]
+        if self.objective == "economic":
+            assert self.economic is not None  # guaranteed by MpcSettings
+            return -1e-6 * self.economic.price_per_kg_dw * cfruit_gain
+        return -self.w_fruit * cfruit_gain
+
+    def _solver_options(self) -> dict[str, Any]:
+        """IPOPT options: the recipe that makes the stiff model tractable (docs/mpc.md).
+
+        A quasi-Newton (L-BFGS) Hessian avoids the exact second-order ODE sensitivity
+        that fails; relaxed tolerances stop at an approximately feasible, approximately
+        optimal point; an iteration cap with a short acceptable-point window bounds the
+        worst-case latency; a wall-clock cap lets the salvage or hold fallback take over on
+        a pathological state. MUMPS is the one linear solver in the CasADi wheel and is
+        deterministic.
+        """
+        options: dict[str, Any] = {"expand": self.expand}  # MX -> SX for faster evaluation
+        if self.jit:  # compile the NLP functions to C once; amortised over the season
+            options["jit"] = True
+            options["compiler"] = "shell"
+            options["jit_options"] = {"flags": ["-O2"], "verbose": False}
+        return {
+            **options,
+            "ipopt.print_level": 5 if self.verbose else 0,
+            "print_time": 0,
+            "ipopt.linear_solver": self.linear_solver,
+            "ipopt.max_iter": self.max_iter,
+            "ipopt.acceptable_iter": 5,
+            "ipopt.max_cpu_time": 30.0,
+            "ipopt.hessian_approximation": "limited-memory",
+            "ipopt.tol": 0.1,
+            "ipopt.acceptable_tol": 0.1,
+            "ipopt.constr_viol_tol": 1e-2,
+            "ipopt.acceptable_constr_viol_tol": 0.1,
         }
-        if self.jit:  # compile the NLP functions to C once; amortized over the season
-            solver_opts["jit"] = True
-            solver_opts["compiler"] = "shell"
-            solver_opts["jit_options"] = {"flags": ["-O2"], "verbose": False}
-        opti.solver(
-            "ipopt",
-            {
-                **solver_opts,
-                "ipopt.print_level": 5 if self.verbose else 0,
-                "print_time": 0,
-                "ipopt.linear_solver": self.linear_solver,
-                # Cap iterations to bound the worst-case per-step latency; pair it with
-                # a short acceptable_iter so IPOPT returns a good-enough point promptly
-                # instead of grinding to the cap (acceptable-point termination:
-                # Waechter & Biegler 2006 [wachter2006ipopt]).
-                "ipopt.max_iter": self.max_iter,
-                "ipopt.acceptable_iter": 5,
-                # Hard wall-clock safety net: a pathological (near-singular) state must
-                # abort in seconds and let the salvage/hold fallback take over, never
-                # grind for minutes. Healthy solves finish in ~1-5 s, well under this.
-                "ipopt.max_cpu_time": 30.0,
-                # van Laatum et al. 2026 [vanlaatum2026rlmpc] recipe: a quasi-Newton
-                # (L-BFGS) Hessian avoids the exact 2nd-order ODE sensitivity that
-                # fails, and relaxed tolerances terminate at an approximately
-                # feasible/optimal point, making the stiff model tractable.
-                "ipopt.hessian_approximation": "limited-memory",
-                "ipopt.tol": 0.1,
-                "ipopt.acceptable_tol": 0.1,
-                "ipopt.constr_viol_tol": 1e-2,
-                "ipopt.acceptable_constr_viol_tol": 0.1,
-                # Speed lever not taken here: IPOPT's default linear solver is MUMPS
-                # (the only one shipped with the pip CasADi wheel). An HSL build
-                # (MA57/MA27) is materially faster on these KKT systems (HSL [hsl];
-                # Waechter & Biegler 2006 [wachter2006ipopt]); adopt it if the public
-                # artifact ships an HSL-enabled CasADi. See docs/mpc.md.
-            },
-        )
-        self._opti = opti
-        self._p_x0, self._p_uprev, self._p_d = p_x0, p_uprev, p_d
-        self._p_xterm = p_xterm
-        self._u_first = u_first
-        self._controls = controls
-        self._seed_states = seed_states
-        self._x_nodes = x_nodes
-        self._built_nd = nd
 
     def solve(  # pragma: no cover - integration (needs gl_gym + solver)
         self,
         x: NDArray[np.float64],
         weather: NDArray[np.float64],
-        terminal_target: NDArray[np.float64] | None = None,
         state_guess: list[NDArray[np.float64]] | None = None,
     ) -> NDArray[np.float64]:
         """Return the first control ``u0`` in [0,1]^6 for state ``x`` and a weather
         forecast ``weather`` of shape ``(>=horizon, nd)`` (disturbances per interval).
 
-        ``terminal_target`` (an unscaled state) is required when ``terminal_weight > 0``:
-        the horizon end is pulled toward it by the terminal cost (arm 4's RL terminal state).
-
         ``state_guess`` (an optional list of ``horizon`` unscaled states, one per interval
         end) warm-starts the collocation states from a physically consistent forward
-        trajectory (arm 4 passes the RL rollout's states). Defaults to seeding every state to
-        ``x0`` -- the cold-start guess that rarely fails; a *shifted previous-solve* seed
-        backfired on the stiff solves, but a fresh forward rollout from the current ``x0`` does not.
+        trajectory (a learned controller could pass its rollout's states). Defaults to
+        seeding every state to ``x0``, the cold-start guess that rarely fails; a shifted
+        previous-solve seed backfired on the stiff solves, but a fresh forward rollout
+        from the current ``x0`` does not.
         """
         s = self.scale
         nu = 6
@@ -547,10 +546,6 @@ class PhysicsOnlyMPC(PhysicsController):
         z0 = np.asarray(x, dtype=float) / s
         opti.set_value(self._p_x0, z0)
         opti.set_value(self._p_uprev, self._u_prev)
-        if self.terminal_weight > 0.0 and self._p_xterm is not None:
-            if terminal_target is None:
-                raise ValueError("terminal_weight > 0 requires a terminal_target in solve()")
-            opti.set_value(self._p_xterm, np.asarray(terminal_target, dtype=float) / s)
         for k in range(self.horizon):
             opti.set_value(self._p_d[k], weather[k])
         # Seed the states fresh from the current x0 every step (they shift too much

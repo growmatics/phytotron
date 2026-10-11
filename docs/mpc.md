@@ -16,17 +16,16 @@ The controller holds a **nominal** model only. In the benchmark this is the simu
 
 ```python
 from phytotron.controllers.base import NominalParameters
-from phytotron.controllers.mpc import PhysicsOnlyMPC
+from phytotron.controllers.mpc import MpcSettings, PhysicsOnlyMPC
 
+settings = MpcSettings.from_config(cfg)  # the benchmark's MPC: economic objective,
+# horizon and step, prices and simulator band from configs/benchmark.yaml
 mpc = PhysicsOnlyMPC(
-    NominalParameters(nominal),  # perturbed parameters, never the plant's own
-    horizon=4,  # 4 x 900 s = 1 hour ahead
-    dt=900.0,
-    objective="economic",
-    economic=cfg.economic,  # prices from configs/benchmark.yaml
-    climate_bounds=bounds,  # CO2, temperature, RH bands
-)
+    NominalParameters(nominal), settings
+)  # perturbed parameters, never the plant's own
 ```
+
+`MpcSettings` has no default objective: a construction says `"economic"` (the benchmark) or `"energy_band"` (a placeholder for solver diagnosis).
 
 `phytotron quickstart --controller mpc` runs it for a season.
 
@@ -37,7 +36,7 @@ mpc = PhysicsOnlyMPC(
 - **Horizon.** 4 intervals of 900 s, about one hour. Van Laatum et al. also use about one hour (12 intervals of 300 s), because longer horizons on this stiff model are computationally intractable.
 - **Input rate limit.** `|u(t) - u(t-1)| <= 0.1 * u_max` per step, as in van Laatum et al.
 - **Soft bounds.** L1 penalties through slack variables, each normalised to order 1 (CO2 by 1000 ppm, temperature by 10 C, RH by 100%) with the scale folded into the weight. Without this normalisation the dual variables spanned about seven orders of magnitude and IPOPT diverged.
-- **Terminal cost (off by default).** `terminal_weight > 0` adds an L1 pull toward a target state at the horizon end. This is the hook RL-in-MPC uses. The physics-only arm runs with `terminal_weight=0`.
+- **Terminal cost (planned).** The RL-in-MPC arm will add an L1 pull toward a target state at the horizon end. Not in the code in this version: the config key `mpc.terminal_weight` stays for it and must be 0.
 
 ## Solver recipe
 

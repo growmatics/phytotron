@@ -11,4 +11,4 @@
 
 ## Code
 
-- [Repository](https://github.com/growmatics/phytotron): version 0.1.0, published 11 October 2026.
+- [Repository](https://github.com/growmatics/phytotron): version 0.2.0, published 11 October 2026.

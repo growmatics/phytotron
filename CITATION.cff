@@ -9,7 +9,7 @@ authors:
 repository-code: "https://github.com/growmatics/phytotron"
 url: "https://growmatics.ai/phytotron"
 license: AGPL-3.0-or-later
-version: 0.1.0
+version: 0.2.0
 date-released: "2026-10-11"
 keywords:
   - greenhouse climate control

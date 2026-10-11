@@ -65,7 +65,7 @@ def run(args: argparse.Namespace) -> None:  # pragma: no cover - needs a live en
     )
     result = run_season_controller(env, controller, seed=0)
 
-    step_hours = float(cfg.raw["episode"]["timestep_seconds"]) / 3600.0
+    step_hours = cfg.episode.step_hours
     assert cfg.economic is not None and result.revenue is not None
     print(f"{args.controller}, simulated season, {gen.location} {args.year}, {days} days")
     print(f"  net economic value: {result.net_economic_value:+.3f} EUR/m2")

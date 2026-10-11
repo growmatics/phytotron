@@ -4,7 +4,7 @@
 label and seed, with the counts of seasons that failed or never started, and derives the
 per-arm numbers on demand: net economic value, the season-level feasibility gate under
 each of its three rules, the per-class safety profile, decision time and the Pareto
-front. :mod:`phytotron.runner` builds it from a run directory's season records;
+front. :mod:`phytotron.summary` builds it from a run directory's season records;
 ``run_season_controller`` in ``envs/glg2.py`` is the primitive that produces one season.
 Every number is derived from the stored seasons, so the raw records stay the source of
 truth.
@@ -12,8 +12,7 @@ truth.
 
 from __future__ import annotations
 
-import os
-import platform
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -29,42 +28,32 @@ from phytotron.metrics.safety import (
     banded_violation,
     safety_profile_from_exceedance,
 )
-from phytotron.reproducibility import thread_settings
 
 _MIN_PARETO_ARMS = 2  # need at least the incumbent plus one comparator for a front
 
 
-def hardware_stamp() -> dict[str, Any]:
-    """Machine identity for the run record, so the online-cost axis is interpretable.
+@dataclass(frozen=True)
+class GateCount:
+    """One class's gate result for one arm: failing seasons (crashes included), the
+    seasons counted, the one-sided Clopper-Pearson upper bound on the failing rate, and
+    whether that bound is within epsilon."""
 
-    ``online_cost`` is wall-clock time (``time.perf_counter``), so it is **relative**:
-    comparable across arms on the *same* machine (the Pareto ordering is valid), but the
-    absolute ms/step is not portable across hardware. Stamping the machine makes the
-    numbers reproducible in context. A fully hardware-independent cost proxy (IPOPT
-    iteration count / NLP evaluations per step) is a possible future refinement.
-
-    The math-library thread settings are recorded too: MPC results depend on them
-    (see :mod:`phytotron.reproducibility`).
-    """
-    return {
-        "platform": platform.platform(),
-        "processor": platform.processor() or platform.machine(),
-        "cpu_count": os.cpu_count(),
-        "python": platform.python_version(),
-        "threads": thread_settings(),
-    }
+    failing: int
+    seasons: int
+    upper_bound: float
+    passes: bool
 
 
 @dataclass(frozen=True)
 class BenchmarkResult:
-    """Every season's result across the grid, plus the run record and gate settings.
+    """Every completed season of a run, plus the gate settings and the failure counts.
 
-    Keyed by ``(arm, condition_label, seed)``. Aggregations (net value, gate, safety)
-    are derived on demand so the raw per-season results stay the source of truth.
+    Keyed by ``(arm, season label, seed)``. Aggregations (net value, the three gates,
+    safety, decision time, the Pareto front) are derived on demand so the raw per-season
+    results stay the source of truth.
     """
 
     seasons: dict[tuple[str, str, int], SeasonResult]
-    record: dict[str, Any]  # config version, git commit, grid, timestamp -- traceability
     gate: GateConfig
     soft_classes: tuple[str, ...]  # exceedance classes gated as soft crop-health
     step_hours: float
@@ -96,90 +85,56 @@ class BenchmarkResult:
             return None, None
         return float(vals.mean()), float(vals.std())
 
-    def gate_outcome(self, arm: str) -> dict[str, bool]:
-        """Per soft class: does the arm clear the season-level feasibility gate?
+    def _gate(
+        self, arm: str, violates: Callable[[SeasonResult, str], bool]
+    ) -> dict[str, GateCount]:
+        """The season-level gate per soft class, under one per-season rule.
 
-        A season counts as violating a class if that class is exceeded at any step; the
-        Clopper-Pearson upper bound on the violating-season rate must be <= epsilon.
-        A season that CRASHED counts as violating every class (conservative: an
-        un-runnable controller cannot claim feasibility on the season it failed). A season
-        the harness could not start is in ``not_started`` and in no count here.
+        ``violates(season, cls)`` says whether a completed season violates the class. A
+        season that CRASHED counts as violating every class (conservative: an un-runnable
+        controller cannot claim feasibility on the season it failed); a season the
+        harness could not start is in ``not_started`` and in no count. The one-sided
+        Clopper-Pearson upper bound on the violating-season rate must be at most epsilon.
         """
         seasons = self._arm_seasons(arm)
         failed = self.failed.get(arm, 0)
         n = len(seasons) + failed
-        outcome: dict[str, bool] = {}
+        counts = {}
         for cls in self.soft_classes:
-            k = failed + sum(1 for r in seasons if r.exceedances.get(cls, np.zeros(1)).max() > 0.0)
-            outcome[cls] = passes_soft_gate(k, n, self.gate.epsilon, self.gate.delta)
-        return outcome
-
-    def banded_gate_outcome(
-        self, arm: str, bands: dict[str, tuple[float, float]]
-    ) -> dict[str, bool]:
-        """Per soft class: does the arm clear the secondary (banded) gate?
-
-        Same Clopper-Pearson test as :meth:`gate_outcome`, but a season counts as violating
-        a class only if it stays more than ``depth`` outside its bound for more than
-        ``min_hours`` consecutive hours, with ``bands[cls] = (depth, min_hours)``. A crashed
-        season still counts as violating.
-        """
-        seasons = self._arm_seasons(arm)
-        failed = self.failed.get(arm, 0)
-        n = len(seasons) + failed
-        outcome: dict[str, bool] = {}
-        for cls in self.soft_classes:
-            depth, min_hours = bands[cls]
-            k = failed + sum(
-                1
-                for r in seasons
-                if cls in r.exceedances
-                and banded_violation(r.exceedances[cls], self.step_hours, depth, min_hours)
+            k = failed + sum(1 for r in seasons if violates(r, cls))
+            counts[cls] = GateCount(
+                failing=k,
+                seasons=n,
+                upper_bound=clopper_pearson_upper(k, n, self.gate.delta) if n else 1.0,
+                passes=passes_soft_gate(k, n, self.gate.epsilon, self.gate.delta),
             )
-            outcome[cls] = passes_soft_gate(k, n, self.gate.epsilon, self.gate.delta)
-        return outcome
-
-    def crop_gate_outcome(
-        self, arm: str, step_seconds: int, rules: dict[str, dict[str, dict[str, Any]]]
-    ) -> dict[str, bool] | None:
-        """Per soft class: does the arm clear the gate under the crop rules?
-
-        Same Clopper-Pearson test as :meth:`gate_outcome`; a season violates a class if
-        its climate trace breaks any of ``rules[cls]`` (see
-        :mod:`phytotron.metrics.crop_rules`). A crashed season still counts as violating.
-        None if any completed season has no climate trace.
-        """
-        seasons = self._arm_seasons(arm)
-        if any(r.climate is None for r in seasons):
-            return None
-        failed = self.failed.get(arm, 0)
-        n = len(seasons) + failed
-        outcome: dict[str, bool] = {}
-        for cls in self.soft_classes:
-            k = failed + sum(
-                1 for r in seasons if _breaks_crop_rules(r, cls, step_seconds, rules[cls])
-            )
-            outcome[cls] = passes_soft_gate(k, n, self.gate.epsilon, self.gate.delta)
-        return outcome
-
-    def crop_gate_counts(
-        self, arm: str, step_seconds: int, rules: dict[str, dict[str, dict[str, Any]]]
-    ) -> dict[str, dict[str, float]] | None:
-        """Per soft class: failing seasons (crashes included), seasons, and the one-sided
-        Clopper-Pearson upper bound on the failing-season rate. None without traces."""
-        seasons = self._arm_seasons(arm)
-        if any(r.climate is None for r in seasons):
-            return None
-        failed = self.failed.get(arm, 0)
-        n = len(seasons) + failed
-        counts: dict[str, dict[str, float]] = {}
-        for cls in self.soft_classes:
-            k = failed + sum(
-                1 for r in seasons if _breaks_crop_rules(r, cls, step_seconds, rules[cls])
-            )
-            bound = clopper_pearson_upper(k, n, self.gate.delta) if n else 1.0
-            counts[cls] = {"failing": k, "seasons": n, "upper_bound": bound}
         return counts
+
+    def strict_gate(self, arm: str) -> dict[str, GateCount]:
+        """A season violates a class if that class is exceeded at any step."""
+        return self._gate(arm, lambda r, cls: bool(r.exceedances.get(cls, np.zeros(1)).max() > 0.0))
+
+    def banded_gate(self, arm: str, bands: dict[str, tuple[float, float]]) -> dict[str, GateCount]:
+        """A season violates a class only if it stays more than ``depth`` outside its bound
+        for more than ``min_hours`` consecutive hours, ``bands[cls] = (depth, min_hours)``."""
+        return self._gate(
+            arm,
+            lambda r, cls: (
+                cls in r.exceedances
+                and banded_violation(r.exceedances[cls], self.step_hours, *bands[cls])
+            ),
+        )
+
+    def crop_gate(
+        self, arm: str, step_seconds: int, rules: dict[str, dict[str, dict[str, Any]]]
+    ) -> dict[str, GateCount] | None:
+        """A season violates a class if its climate trace breaks any of ``rules[cls]`` (see
+        :mod:`phytotron.metrics.crop_rules`). None if any completed season has no climate
+        trace: the gate cannot be computed, and the Pareto ranking treats the arm as not
+        a passer."""
+        if any(r.climate is None for r in self._arm_seasons(arm)):
+            return None
+        return self._gate(arm, lambda r, cls: _breaks_crop_rules(r, cls, step_seconds, rules[cls]))
 
     def gate_underpowered(self, arm: str) -> bool:
         """True when the arm's season count (completed + failed) is below the
@@ -193,7 +148,7 @@ class BenchmarkResult:
         traces = [r.exceedances[cls] for r in self._arm_seasons(arm) if cls in r.exceedances]
         return safety_profile_from_exceedance(traces, step_hours=self.step_hours)
 
-    def online_cost(self, arm: str) -> float | None:
+    def decision_time(self, arm: str) -> float | None:
         """Mean online (deployment) decision time per step [s] over the arm's completed
         seasons; None without one (never NaN).
 
@@ -233,7 +188,7 @@ class BenchmarkResult:
             a
             for a in self.arms()
             if self._arm_seasons(a)
-            and (not gate_passers_only or all(self.gate_outcome(a).values()))
+            and (not gate_passers_only or all(g.passes for g in self.strict_gate(a).values()))
         ]
         if incumbent in self.arms() and incumbent not in arms:
             arms = [*arms, incumbent]
@@ -247,7 +202,7 @@ class BenchmarkResult:
                 "reference": "anti_ideal",
             }
         # maximisation on both axes: net value up, online cost down (negated)
-        costs = {a: self.online_cost(a) for a in arms}
+        costs = {a: self.decision_time(a) for a in arms}
         assert all(c is not None for c in costs.values())  # arms have completed seasons
         points = np.array([[self.net_value_summary(a)[0], -(costs[a] or 0.0)] for a in arms])
         norm, _lo, _hi = normalize_minmax(points)

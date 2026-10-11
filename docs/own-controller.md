@@ -78,7 +78,7 @@ The summary then lists `thermostat` next to the incumbent, with its gate verdict
 
 - A class needs a no-argument constructor. A controller that needs the simulator, the configuration or a perturbed model is registered as a factory instead: `--controller mine=my_module:make_controller`, where `make_controller(env, cfg, mismatch, seed)` returns the controller.
 - `--model-based name` marks a controller that plans with a model. It then runs the whole mismatch ladder, and its verdict pools the seasons above mismatch 0, like the reference MPC. Without the flag it runs at mismatch 0 only, like the incumbent.
-- `--seed-sensitive name` marks a controller whose season depends on the seed (a stochastic policy). Every seed then runs; by default one seed runs per condition, as for the incumbent.
+- `--seed-sensitive name` marks a controller whose season depends on the seed (a stochastic policy). Every seed then runs; by default one seed runs per weather year and mismatch level, as for the incumbent.
 - The run record stores the module's file and its hash. A resume with changed controller code is refused, so a run never mixes two versions of your controller.
 - Leaving out `--arms` runs the reference arms plus every registered controller.
 
@@ -101,7 +101,7 @@ Subclass `phytotron.controllers.base.PhysicsController` to have this enforced: i
 
 ## Run the full benchmark grid
 
-`phytotron run` runs every arm, yours included, over every held-out season, mismatch level and seed, in parallel, and writes a gated summary (see [Run it through the benchmark](#run-it-through-the-benchmark) above). For a run inside your own script, `phytotron.runner.build_tasks` lists the seasons of the grid, `phytotron.runner.run_task` runs one and returns its record, and `phytotron.runner.summarize` turns the records into the same gated summary.
+`phytotron run` runs every arm, yours included, over every held-out season, mismatch level and seed, in parallel, and writes a gated summary (see [Run it through the benchmark](#run-it-through-the-benchmark) above). For a run inside your own script, `phytotron.grid.build_tasks` lists the seasons of the grid, `phytotron.season.run_task` runs one and returns its record, and `phytotron.summary.summarize` turns the records into the same gated summary.
 
 ## Checklist before you report a result
 

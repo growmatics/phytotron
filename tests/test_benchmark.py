@@ -3,9 +3,11 @@
 import numpy as np
 import pytest
 
-from phytotron.benchmark import BenchmarkResult, hardware_stamp
+from phytotron.benchmark import BenchmarkResult, GateCount
 from phytotron.config import GateConfig
 from phytotron.envs.glg2 import SeasonResult
+from phytotron.metrics.gate import clopper_pearson_upper
+from phytotron.provenance import hardware_stamp
 
 _GATE = GateConfig(epsilon=0.05, delta=0.05, n_seasons_min=60, method="clopper_pearson")
 
@@ -13,7 +15,7 @@ _GATE = GateConfig(epsilon=0.05, delta=0.05, n_seasons_min=60, method="clopper_p
 def _season(
     net: float,
     humidity_trace: list[float],
-    online_cost: float = 0.0,
+    decision_time: float = 0.0,
     solve_success: float | None = None,
 ) -> SeasonResult:
     return SeasonResult(
@@ -22,7 +24,7 @@ def _season(
             "humidity": np.array(humidity_trace),
             "temperature": np.zeros(len(humidity_trace)),
         },
-        online_cost_seconds=online_cost,
+        online_cost_seconds=decision_time,
         solve_success=solve_success,
     )
 
@@ -34,7 +36,6 @@ def _result(
 ) -> BenchmarkResult:
     return BenchmarkResult(
         seasons=seasons,
-        record={"config_version": "test"},
         gate=_GATE,
         soft_classes=("humidity",),
         step_hours=0.25,
@@ -56,23 +57,23 @@ def test_arms_and_net_value_summary() -> None:
     assert std == pytest.approx(1.0)
 
 
-def test_gate_outcome_clean_arm_passes_violating_arm_fails() -> None:
+def test_strict_gate_clean_arm_passes_violating_arm_fails() -> None:
     # a clean arm: 0 violating seasons out of a handful -> passes; but with too few
     # seasons the Clopper-Pearson bound is loose, so use enough clean seasons.
     clean = {("mpc", "y", s): _season(1.0, [0.0, 0.0]) for s in range(80)}
-    assert _result(clean).gate_outcome("mpc")["humidity"] is True
+    assert _result(clean).strict_gate("mpc")["humidity"].passes is True
     # an arm that violates humidity every season fails outright
     dirty = {("rb", "y", s): _season(1.0, [1.0, 0.0]) for s in range(80)}
-    assert _result(dirty).gate_outcome("rb")["humidity"] is False
+    assert _result(dirty).strict_gate("rb")["humidity"].passes is False
 
 
 def test_failed_seasons_count_as_gate_violations_not_exclusions() -> None:
     # 80 clean seasons pass the gate; the same 80 plus 10 CRASHED seasons must fail it
     # (a crashed season is a deployment failure, never a silently dropped observation).
     clean = {("mpc", "y", s): _season(1.0, [0.0, 0.0]) for s in range(80)}
-    assert _result(clean).gate_outcome("mpc")["humidity"] is True
+    assert _result(clean).strict_gate("mpc")["humidity"].passes is True
     res = _result(clean, failed={"mpc": 10})
-    assert res.gate_outcome("mpc")["humidity"] is False
+    assert res.strict_gate("mpc")["humidity"].passes is False
     # net-value stats stay over completed seasons (no invented numbers for crashes)
     mean, _std = res.net_value_summary("mpc")
     assert mean == pytest.approx(1.0)
@@ -81,10 +82,10 @@ def test_failed_seasons_count_as_gate_violations_not_exclusions() -> None:
     only_failed = _result(clean, failed={"rl": 3})
     assert "rl" in only_failed.arms()
     assert only_failed.net_value_summary("rl") == (None, None)
-    assert only_failed.online_cost("rl") is None
+    assert only_failed.decision_time("rl") is None
     # and it has no point on the Pareto front, so it cannot be non-dominated by accident
     front = _result(
-        clean | {("rb", "y", 0): _season(0.5, [0.0, 0.0], online_cost=1.0)}, failed={"rl": 3}
+        clean | {("rb", "y", 0): _season(0.5, [0.0, 0.0], decision_time=1.0)}, failed={"rl": 3}
     )
     pareto = front.pareto(incumbent="rb", gate_passers_only=False)
     assert pareto["arms"] == ["mpc", "rb"] and "rl" not in pareto["non_dominated"]
@@ -94,13 +95,13 @@ def test_seasons_the_harness_could_not_start_are_listed_not_counted() -> None:
     # 80 clean seasons plus 10 that never reached the controller: the gate sees 80.
     clean = {("mpc", "y", s): _season(1.0, [0.0, 0.0]) for s in range(80)}
     res = _result(clean, not_started={"mpc": 10})
-    assert res.gate_outcome("mpc")["humidity"] is True
+    assert res.strict_gate("mpc")["humidity"].passes is True
     assert res.gate_underpowered("mpc") is False
     # unstarted seasons are in no count: 59 completed plus 10 unstarted is below the floor
     fiftynine = {("mpc", "y", s): _season(1.0, [0.0]) for s in range(59)}
     assert _result(fiftynine, not_started={"mpc": 10}).gate_underpowered("mpc") is True
     # the same 10 as controller failures fail the gate (the existing rule)
-    assert _result(clean, failed={"mpc": 10}).gate_outcome("mpc")["humidity"] is False
+    assert _result(clean, failed={"mpc": 10}).strict_gate("mpc")["humidity"].passes is False
     # an arm known only through unstarted seasons still appears, with nothing to score
     assert "rl" in _result(clean, not_started={"rl": 3}).arms()
 
@@ -126,9 +127,9 @@ def test_pareto_over_clean_arms() -> None:
     # incumbent and mpc. mpc: same value as rl but most costly -> dominated by rl.
     clean = {}
     for s in range(80):
-        clean[("incumbent", "y", s)] = _season(0.0, [0.0], online_cost=0.5)
-        clean[("mpc", "y", s)] = _season(5.0, [0.0], online_cost=1.0)
-        clean[("rl", "y", s)] = _season(5.0, [0.0], online_cost=0.01)
+        clean[("incumbent", "y", s)] = _season(0.0, [0.0], decision_time=0.5)
+        clean[("mpc", "y", s)] = _season(5.0, [0.0], decision_time=1.0)
+        clean[("rl", "y", s)] = _season(5.0, [0.0], decision_time=0.01)
     par = _result(clean).pareto(incumbent="incumbent")
     assert set(par["arms"]) == {"incumbent", "mpc", "rl"}
     assert set(par["non_dominated"]) == {"rl"}  # rl dominates both (better value, cheaper)
@@ -139,10 +140,10 @@ def test_pareto_over_clean_arms() -> None:
 
 def test_online_cost_mean() -> None:
     seasons = {
-        ("mpc", "y", 0): _season(1.0, [0.0], online_cost=0.8),
-        ("mpc", "y", 1): _season(1.0, [0.0], online_cost=1.2),
+        ("mpc", "y", 0): _season(1.0, [0.0], decision_time=0.8),
+        ("mpc", "y", 1): _season(1.0, [0.0], decision_time=1.2),
     }
-    assert _result(seasons).online_cost("mpc") == pytest.approx(1.0)
+    assert _result(seasons).decision_time("mpc") == pytest.approx(1.0)
 
 
 def test_solve_success_averages_mpc_arms_and_is_none_for_solver_free() -> None:
@@ -161,3 +162,20 @@ def test_hardware_stamp_has_the_reproducibility_fields() -> None:
     # the online-cost axis is hardware-dependent, so the record must carry these
     for key in ("platform", "processor", "cpu_count", "python", "threads"):
         assert key in stamp
+
+
+def test_the_three_gates_are_one_count_under_different_rules() -> None:
+    # 70 clean seasons, 10 with a brief excursion (strict fails, banded passes), 2 failed.
+    seasons = {("mpc", "y", s): _season(1.0, [0.0, 0.0]) for s in range(70)}
+    seasons |= {("mpc", "z", s): _season(1.0, [3.0] + [0.0] * 7) for s in range(10)}
+    res = _result(seasons, failed={"mpc": 2})
+    strict = res.strict_gate("mpc")["humidity"]
+    banded = res.banded_gate("mpc", {"humidity": (2.0, 1.0)})["humidity"]
+    assert strict == GateCount(12, 82, clopper_pearson_upper(12, 82, 0.05), False)
+    # the two crashes alone put 82 seasons above the 5% bound (two are tolerated from 124)
+    assert banded == GateCount(2, 82, clopper_pearson_upper(2, 82, 0.05), False)
+    assert banded.upper_bound == pytest.approx(0.0748, abs=1e-4)
+    # without climate traces the crop gate cannot be computed
+    assert res.crop_gate("mpc", 900, {"humidity": {}}) is None
+    # one rule, one count: a custom rule that violates nothing gives the failed seasons only
+    assert res._gate("mpc", lambda r, cls: False)["humidity"].failing == 2

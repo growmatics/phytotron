@@ -12,7 +12,6 @@ import argparse
 import json
 from collections.abc import Callable
 from concurrent.futures import Future
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +22,9 @@ from phytotron.commands import run_benchmark
 from phytotron.commands.run_benchmark import build_parser, main, run
 from phytotron.config import load_config
 from phytotron.envs.glg2 import SeasonResult
-from phytotron.runner import Paths, Task, season_record
+from phytotron.grid import Task
+from phytotron.records import FailureRecord, Record, season_record
+from phytotron.season import Paths
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "configs" / "benchmark.yaml"
@@ -61,18 +62,18 @@ class _FakeSeasons:
         self.failed_once: set[str] = set()
         self.fail_arm = fail_arm
 
-    def __call__(self, task: Task, paths: Paths) -> dict[str, Any]:
+    def __call__(self, task: Task, paths: Paths) -> Record:
         self.calls.append(task.key)
         fails = task.arm == self.fail_arm or task.seed == 1
         if fails and task.key not in self.failed_once:
             self.failed_once.add(task.key)
-            return {
-                "task": asdict(task),
-                "label": task.label,
-                "error": "RuntimeError: boom",
-                "stage": "season",
-                "failed_at": "2026-10-11T00:00:00+00:00",
-            }
+            return FailureRecord(
+                task=task,
+                label=task.label,
+                error="RuntimeError: boom",
+                stage="season",
+                failed_at="2026-10-11T00:00:00+00:00",
+            )
         zeros = np.zeros(STEPS)
         result = SeasonResult(
             net_economic_value=1.0 - task.mismatch,

@@ -31,7 +31,7 @@ from gl_gym.environments.tomato_env import TomatoEnv  # noqa: E402
 
 from phytotron.config import load_config  # noqa: E402
 from phytotron.controllers.base import NominalParameters  # noqa: E402
-from phytotron.controllers.mpc import PhysicsOnlyMPC  # noqa: E402
+from phytotron.controllers.mpc import MpcSettings, PhysicsOnlyMPC  # noqa: E402
 from phytotron.envs.glg2 import paths_from_env  # noqa: E402
 
 _CONFIG = Path(__file__).resolve().parents[1] / "configs" / "benchmark.yaml"
@@ -132,7 +132,10 @@ def _run(source_weather_dir: str, weather_dir: str) -> None:
     env.reset(seed=0)
     params = NominalParameters({str(i): float(v) for i, v in enumerate(np.array(env.p).flatten())})
     mpc = PhysicsOnlyMPC(
-        params, horizon=horizon, dt=dt, objective="economic", economic=ec, climate_bounds=bounds
+        params,
+        MpcSettings(
+            objective="economic", horizon=horizon, dt=dt, economic=ec, climate_bounds=bounds
+        ),
     )
     mpc.reset()
 

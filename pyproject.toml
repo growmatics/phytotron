@@ -13,7 +13,7 @@ allow-direct-references = true
 
 [project]
 name = "phytotron"
-version = "0.1.0"
+version = "0.2.0"
 description = "An open virtual phytotron for benchmarking greenhouse climate control."
 readme = "README.md"
 requires-python = ">=3.11,<3.13"  # numpy<2 has no wheels for 3.13
@@ -50,8 +50,14 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "C4", "UP", "PL", "RUF"]
-ignore = ["PLR0913"]
+select = ["E", "F", "I", "B", "C4", "UP", "PL", "RUF", "C901"]
+# Size rules (stage 2 of the code-quality plan, 2026-10-11): a function does one thing.
+# The per-file ignores below are the baseline; each names the step that removes it or
+# why it stays.
+mccabe.max-complexity = 10
+pylint.max-args = 7
+pylint.max-branches = 12
+pylint.max-statements = 50
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLR2004"]         # explicit expected values in asserts are the point of a test
@@ -60,7 +66,8 @@ ignore = ["PLR0913"]
 "phytotron/data/fetch.py" = ["PLC0415"]  # entsoe is imported lazily (optional dependency)
 "phytotron/models/outputs.py" = ["PLC0415"]  # casadi imported lazily (keeps package import cheap)
 "phytotron/controllers/rule_based.py" = ["PLC0415"]  # gl_gym imported lazily
-"phytotron/controllers/mpc.py" = ["PLC0415", "PLR0915"]  # lazy imports; the OCP builder is one long method
+"phytotron/controllers/mpc.py" = ["PLC0415"]  # casadi and gl_gym are imported lazily
+"phytotron/metrics/crop_rules.py" = ["PLR0913"]  # permanent: a rule's arguments are its config keys, passed by name
 
 [tool.mypy]
 python_version = "3.11"

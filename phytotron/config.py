@@ -93,17 +93,7 @@ class GateConfig:
     def validate(self) -> None:
         """Raise ``ValueError`` if a class, rule, verdict or gate choice is invalid."""
         for cls in self.classes:
-            if cls.kind not in GATE_KINDS:
-                raise ValueError(f"gate class {cls.name!r}: kind must be one of {GATE_KINDS}")
-            if cls.gated and (cls.depth is None or cls.min_hours is None):
-                raise ValueError(f"soft gate class {cls.name!r} needs banded depth and min_hours")
-            if cls.gated and self.primary == "crop_rules" and not cls.rules:
-                raise ValueError(f"soft gate class {cls.name!r} needs crop rules")
-            for rule, spec in cls.rules.items():
-                try:
-                    check_rule(spec)
-                except ValueError as err:
-                    raise ValueError(f"class {cls.name!r}, rule {rule!r}: {err}") from err
+            self._validate_class(cls)
         if self.primary not in PRIMARY_GATES:
             raise ValueError(f"gate.primary must be one of {PRIMARY_GATES}")
         if self.rules_status not in RULES_STATUSES:
@@ -115,9 +105,67 @@ class GateConfig:
         if self.protocol_version < 1:
             raise ValueError("gate.protocol_version must be 1 or higher")
 
+    def _validate_class(self, cls: GateClass) -> None:
+        if cls.kind not in GATE_KINDS:
+            raise ValueError(f"gate class {cls.name!r}: kind must be one of {GATE_KINDS}")
+        if cls.gated and (cls.depth is None or cls.min_hours is None):
+            raise ValueError(f"soft gate class {cls.name!r} needs banded depth and min_hours")
+        if cls.gated and self.primary == "crop_rules" and not cls.rules:
+            raise ValueError(f"soft gate class {cls.name!r} needs crop rules")
+        for rule, spec in cls.rules.items():
+            try:
+                check_rule(spec)
+            except ValueError as err:
+                raise ValueError(f"class {cls.name!r}, rule {rule!r}: {err}") from err
+
     def rules(self, name: str) -> dict[str, dict[str, Any]]:
         """The crop rules of a soft class, in config order."""
         return next(c for c in self.classes if c.name == name).rules
+
+
+@dataclass(frozen=True)
+class EpisodeConfig:
+    """The season's time grid: days, control steps, and the step length."""
+
+    crop_days: int
+    steps: int
+    timestep_seconds: int
+
+    @property
+    def step_hours(self) -> float:
+        return self.timestep_seconds / 3600.0
+
+
+@dataclass(frozen=True)
+class ChecksConfig:
+    """The per-season checks in the runner; a season that fails one is a failed season."""
+
+    action_tolerance: float  # a control may leave its range by at most this (round-off)
+
+
+@dataclass(frozen=True)
+class GridConfig:
+    """The grid axes the config sets: the mismatch ladder and the seeds per condition."""
+
+    mismatch_levels: tuple[float, ...]
+    seeds_per_condition: int
+
+
+@dataclass(frozen=True)
+class ConstraintsConfig:
+    """The simulator's climate band, ``(low, high)`` per output. The reference MPC plans
+    against it and the simulator scores against it; the gate does not use it."""
+
+    co2_ppm: tuple[float, float]
+    air_temp_c: tuple[float, float]
+    rh_percent: tuple[float, float]
+
+    def bounds(self) -> dict[str, tuple[float, float]]:
+        return {
+            "co2_ppm": self.co2_ppm,
+            "air_temp_c": self.air_temp_c,
+            "rh_percent": self.rh_percent,
+        }
 
 
 @dataclass(frozen=True)
@@ -184,6 +232,10 @@ class BenchmarkConfig:
     raw: dict[str, Any]
     gate: GateConfig
     generalisation: GeneralisationConfig
+    episode: EpisodeConfig
+    checks: ChecksConfig
+    grid: GridConfig
+    constraints: ConstraintsConfig
     economic: EconomicConfig | None = None
     mpc: MpcConfig | None = None
 
@@ -202,9 +254,15 @@ class BenchmarkConfig:
 
     def validate(self) -> None:
         """Raise ``ValueError`` if any constant is out of range or inconsistent."""
+        self._validate_gate_numbers()
+        self.gate.validate()
+        self._validate_years()
+        self._validate_episode()
+        self._validate_blocks()
+
+    def _validate_gate_numbers(self) -> None:
         if not 0.0 < self.gate.epsilon < 1.0:
             raise ValueError(f"epsilon must be in (0, 1), got {self.gate.epsilon}")
-        self.gate.validate()
         if not 0.0 < self.gate.delta < 1.0:
             raise ValueError(f"delta must be in (0, 1), got {self.gate.delta}")
         required = min_seasons(self.gate.epsilon, self.gate.delta)
@@ -214,6 +272,8 @@ class BenchmarkConfig:
                 f"seasons required for a clean pass at eps={self.gate.epsilon}, "
                 f"delta={self.gate.delta}"
             )
+
+    def _validate_years(self) -> None:
         train = set(self.generalisation.train_years)
         heldout = set(self.generalisation.heldout_years)
         if not train or not heldout:
@@ -223,17 +283,31 @@ class BenchmarkConfig:
             raise ValueError(
                 f"weather-year split leaks: {sorted(overlap)} in both train and held-out"
             )
-        episode = self.raw.get("episode")
-        if episode is not None:
-            days = self.generalisation.season_length_days
-            if int(episode["crop_days"]) != days:
-                raise ValueError(
-                    f"episode.crop_days={episode['crop_days']} disagrees with "
-                    f"generalisation.season_length_days={days}"
-                )
-            steps = days * 86400 // int(episode["timestep_seconds"])
-            if int(episode["steps"]) != steps:
-                raise ValueError(f"episode.steps={episode['steps']} should be {steps}")
+
+    def _validate_episode(self) -> None:
+        days = self.generalisation.season_length_days
+        if self.episode.crop_days != days:
+            raise ValueError(
+                f"episode.crop_days={self.episode.crop_days} disagrees with "
+                f"generalisation.season_length_days={days}"
+            )
+        steps = days * 86400 // self.episode.timestep_seconds
+        if self.episode.steps != steps:
+            raise ValueError(f"episode.steps={self.episode.steps} should be {steps}")
+
+    def _validate_blocks(self) -> None:
+        if self.mpc is not None and self.mpc.terminal_weight != 0.0:
+            raise ValueError(
+                "mpc.terminal_weight must be 0: the terminal cost (the RL-in-MPC arm's hook) "
+                "is planned, not in this version"
+            )
+        if self.checks.action_tolerance < 0.0:
+            raise ValueError("checks.action_tolerance must be non-negative")
+        if self.grid.seeds_per_condition < 1:
+            raise ValueError("reporting.seeds_per_condition must be 1 or higher")
+        for name, (low, high) in self.constraints.bounds().items():
+            if not low < high:
+                raise ValueError(f"constraints.{name} must be [low, high], got {[low, high]}")
 
 
 def _gate_class(name: str, spec: dict[str, Any]) -> GateClass:
@@ -279,8 +353,29 @@ def load_config(path: str | Path) -> BenchmarkConfig:
         if "mpc" in data
         else None
     )
+    episode_raw, checks_raw, band = data["episode"], data["checks"], data["constraints"]
     config = BenchmarkConfig(
-        raw=data, gate=gate, generalisation=generalisation, economic=economic, mpc=mpc
+        raw=data,
+        gate=gate,
+        generalisation=generalisation,
+        episode=EpisodeConfig(
+            crop_days=int(episode_raw["crop_days"]),
+            steps=int(episode_raw["steps"]),
+            timestep_seconds=int(episode_raw["timestep_seconds"]),
+        ),
+        checks=ChecksConfig(action_tolerance=float(checks_raw["action_tolerance"])),
+        grid=GridConfig(
+            mismatch_levels=tuple(float(m) for m in data["mismatch"]["sweep_magnitudes"]),
+            seeds_per_condition=int(data["reporting"]["seeds_per_condition"]),
+        ),
+        constraints=ConstraintsConfig(
+            **{
+                k: (float(band[k][0]), float(band[k][1]))
+                for k in ("co2_ppm", "air_temp_c", "rh_percent")
+            }
+        ),
+        economic=economic,
+        mpc=mpc,
     )
     config.validate()
     return config

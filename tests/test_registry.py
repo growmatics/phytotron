@@ -9,7 +9,7 @@ import pytest
 
 from phytotron.controllers.registry import (
     ArmSpec,
-    build_custom,
+    build_registered,
     load_target,
     make_factory,
     parse_spec,
@@ -107,12 +107,12 @@ def test_make_factory_wraps_a_class_and_passes_a_function(module_dir: Path) -> N
 
 
 def test_build_custom_checks_the_interface(module_dir: Path) -> None:
-    controller = build_custom("user_ctrl:make", "env", "cfg", mismatch=0.0, seed=1)
+    controller = build_registered("user_ctrl:make", "env", "cfg", mismatch=0.0, seed=1)
     assert controller.gain == 1.0
     with pytest.raises(ValueError, match="no act"):
-        build_custom("user_ctrl:NoAct", "env", "cfg", mismatch=0.0, seed=0)
+        build_registered("user_ctrl:NoAct", "env", "cfg", mismatch=0.0, seed=0)
     with pytest.raises(TypeError):  # a class that needs arguments must come as a factory
-        build_custom("user_ctrl:NeedsArgs", "env", "cfg", mismatch=0.0, seed=0)
+        build_registered("user_ctrl:NeedsArgs", "env", "cfg", mismatch=0.0, seed=0)
 
 
 def test_target_source_names_the_file_and_its_hash(module_dir: Path) -> None:

@@ -68,3 +68,35 @@ def test_every_relative_doc_link_resolves(doc: Path) -> None:
     targets = [t for t in DOC_LINK.findall(doc.read_text()) if "://" not in t]
     broken = sorted(t for t in targets if not (doc.parent / t).exists())
     assert broken == [], f"{doc.relative_to(ROOT)} links to files that do not exist: {broken}"
+
+
+# Words the glossary (docs/README.md) replaces. Prose only: backticked keys and identifiers
+# may keep an older word, and the glossary's own "not" lines name them on purpose.
+BANNED_WORDS = (
+    "testbed",
+    "episode",
+    "condition",
+    "hard gate",
+    "soft gate",
+    "rules version",
+    "online cost",
+    "latency",
+    "comparator",
+    "contestant",
+)  # "digital twin" has its own rule in test_site.py (the FAQ may ask the question)
+PROSE_DOCS = sorted([*ROOT.glob("docs/*.md"), *ROOT.glob("site/content/*.md"), ROOT / "README.md"])
+
+
+def _prose(text: str) -> str:
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)  # code blocks
+    text = re.sub(r"`[^`]*`", " ", text)  # inline code and keys
+    text = re.sub(r'Not "[^"]*"(?:, "[^"]*")*(?: or "[^"]*")?', " ", text)  # the glossary's lists
+    text = re.sub(r'never "[^"]*"', " ", text)
+    return text
+
+
+@pytest.mark.parametrize("doc", PROSE_DOCS, ids=lambda p: str(p.relative_to(ROOT)))
+def test_docs_use_the_glossary_words(doc: Path) -> None:
+    prose = _prose(doc.read_text()).lower()
+    found = sorted(w for w in BANNED_WORDS if re.search(rf"\b{re.escape(w)}s?\b", prose))
+    assert found == [], f"{doc.relative_to(ROOT)} uses {found}; see the glossary in docs/README.md"

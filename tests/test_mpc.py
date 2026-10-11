@@ -5,13 +5,17 @@ tested here. The full closed-loop solve is an integration test validated
 separately (examples/validate_mpc.py), not run in CI.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+from phytotron.config import load_config
 from phytotron.controllers.base import GroundTruthParameters, NominalParameters
 from phytotron.controllers.mpc import (
     _SINGULAR_IDX,
     STATE_SCALE,
+    MpcSettings,
     PhysicsOnlyMPC,
     _domain_safe,
     _state_box,
@@ -62,18 +66,22 @@ def test_state_scale_covers_all_states() -> None:
 def test_mpc_refuses_ground_truth_parameters() -> None:
     # the inverse-crime boundary: a physics controller may not hold the sim's truth
     with pytest.raises(TypeError, match="inverse-crime"):
-        PhysicsOnlyMPC(GroundTruthParameters({"0": 1.0}))  # type: ignore[arg-type]
+        PhysicsOnlyMPC(GroundTruthParameters({"0": 1.0}), MpcSettings("energy_band"))  # type: ignore[arg-type]
 
 
 def test_mpc_constructs_with_nominal_parameters() -> None:
-    mpc = PhysicsOnlyMPC(NominalParameters({str(i): 0.0 for i in range(5)}), horizon=2)
+    mpc = PhysicsOnlyMPC(
+        NominalParameters({str(i): 0.0 for i in range(5)}), MpcSettings("energy_band", horizon=2)
+    )
     assert mpc.horizon == 2
     assert np.asarray(mpc._params_vec).shape == (5,)
 
 
 def test_solve_stats_initializes_and_resets() -> None:
     # the per-solve reliability tally (clean/salvage/hold) starts empty and reset() clears it
-    mpc = PhysicsOnlyMPC(NominalParameters({str(i): 0.0 for i in range(5)}), horizon=2)
+    mpc = PhysicsOnlyMPC(
+        NominalParameters({str(i): 0.0 for i in range(5)}), MpcSettings("energy_band", horizon=2)
+    )
     assert mpc.solve_stats == {"clean": 0, "salvage": 0, "hold": 0}
     mpc.solve_stats["clean"] = 7
     mpc.solve_stats["hold"] = 2
@@ -81,15 +89,25 @@ def test_solve_stats_initializes_and_resets() -> None:
     assert mpc.solve_stats == {"clean": 0, "salvage": 0, "hold": 0}
 
 
-def test_mpc_rejects_unknown_objective() -> None:
+def test_settings_reject_an_unknown_objective_and_need_one() -> None:
     with pytest.raises(ValueError, match="objective must be"):
-        PhysicsOnlyMPC(NominalParameters({"0": 0.0}), objective="bogus")
+        MpcSettings(objective="bogus")
+    with pytest.raises(TypeError):  # no default: every construction says which objective
+        MpcSettings()  # type: ignore[call-arg]
 
 
 def test_economic_objective_requires_its_config() -> None:
     # objective='economic' without economic=/climate_bounds= is a construction error
     with pytest.raises(ValueError, match="requires economic"):
-        PhysicsOnlyMPC(NominalParameters({"0": 0.0}), objective="economic")
+        MpcSettings(objective="economic")
+
+
+def test_settings_from_config_are_the_benchmark_mpc() -> None:
+    cfg = load_config(Path(__file__).resolve().parent.parent / "configs" / "benchmark.yaml")
+    s = MpcSettings.from_config(cfg)
+    assert s.objective == "economic"
+    assert s.horizon == cfg.mpc.horizon_steps and s.dt == cfg.episode.timestep_seconds
+    assert s.economic == cfg.economic and s.climate_bounds == cfg.constraints.bounds()
 
 
 def test_collocation_integrates_a_linear_ode() -> None:

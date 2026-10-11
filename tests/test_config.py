@@ -8,10 +8,15 @@ import yaml
 
 from phytotron.config import (
     BenchmarkConfig,
+    ChecksConfig,
+    ConstraintsConfig,
     EconomicConfig,
+    EpisodeConfig,
     GateClass,
     GateConfig,
     GeneralisationConfig,
+    GridConfig,
+    MpcConfig,
     load_config,
 )
 
@@ -20,6 +25,14 @@ CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "benchmark.ya
 _OK_GATE = GateConfig(
     epsilon=0.05, delta=0.05, n_seasons_min=60, method="clopper_pearson_one_sided_upper"
 )
+_OK_EPISODE = EpisodeConfig(crop_days=60, steps=5760, timestep_seconds=900)
+_OK_BLOCKS = {
+    "checks": ChecksConfig(action_tolerance=1e-6),
+    "grid": GridConfig(mismatch_levels=(0.0, 0.1), seeds_per_condition=2),
+    "constraints": ConstraintsConfig(
+        co2_ppm=(300.0, 1600.0), air_temp_c=(15.0, 34.0), rh_percent=(50.0, 85.0)
+    ),
+}
 _OK_GEN = GeneralisationConfig(
     location="X",
     train_years=(2019, 2020),
@@ -65,6 +78,8 @@ def test_validate_rejects_too_few_seasons() -> None:
             epsilon=0.05, delta=0.05, n_seasons_min=10, method="clopper_pearson_one_sided_upper"
         ),
         generalisation=_OK_GEN,
+        episode=_OK_EPISODE,
+        **_OK_BLOCKS,
     )
     with pytest.raises(ValueError):
         bad.validate()
@@ -77,6 +92,8 @@ def test_validate_rejects_out_of_range_epsilon() -> None:
             epsilon=1.5, delta=0.05, n_seasons_min=60, method="clopper_pearson_one_sided_upper"
         ),
         generalisation=_OK_GEN,
+        episode=_OK_EPISODE,
+        **_OK_BLOCKS,
     )
     with pytest.raises(ValueError):
         bad.validate()
@@ -93,6 +110,8 @@ def test_validate_rejects_leaky_split() -> None:
             season_start_day=59,
             season_length_days=60,
         ),
+        episode=_OK_EPISODE,
+        **_OK_BLOCKS,
     )
     with pytest.raises(ValueError, match="leaks"):
         bad.validate()
@@ -119,9 +138,11 @@ def test_l5_economic_applies_paper_overrides() -> None:
 
 def test_validate_rejects_episode_length_that_disagrees_with_season() -> None:
     bad = BenchmarkConfig(
-        raw={"episode": {"crop_days": 30, "steps": 2880, "timestep_seconds": 900}},
+        raw={},
         gate=_OK_GATE,
         generalisation=_OK_GEN,
+        episode=EpisodeConfig(crop_days=30, steps=2880, timestep_seconds=900),
+        **_OK_BLOCKS,
     )
     with pytest.raises(ValueError, match="crop_days"):
         bad.validate()
@@ -129,9 +150,11 @@ def test_validate_rejects_episode_length_that_disagrees_with_season() -> None:
 
 def test_validate_rejects_step_count_that_disagrees_with_season() -> None:
     bad = BenchmarkConfig(
-        raw={"episode": {"crop_days": 60, "steps": 5000, "timestep_seconds": 900}},
+        raw={},
         gate=_OK_GATE,
         generalisation=_OK_GEN,
+        episode=EpisodeConfig(crop_days=60, steps=5000, timestep_seconds=900),
+        **_OK_BLOCKS,
     )
     with pytest.raises(ValueError, match="steps"):
         bad.validate()
@@ -214,3 +237,64 @@ def test_validate_rejects_a_gate_method_the_code_does_not_implement() -> None:
     gate = GateConfig(epsilon=0.05, delta=0.05, n_seasons_min=60, method="wilson")
     with pytest.raises(ValueError, match=r"gate\.method"):
         gate.validate()
+
+
+def test_canonical_config_loads_the_typed_blocks() -> None:
+    cfg = load_config(CONFIG_PATH)
+    assert cfg.episode == EpisodeConfig(
+        crop_days=cfg.raw["episode"]["crop_days"],
+        steps=cfg.raw["episode"]["steps"],
+        timestep_seconds=cfg.raw["episode"]["timestep_seconds"],
+    )
+    assert cfg.episode.step_hours == pytest.approx(cfg.episode.timestep_seconds / 3600)
+    assert cfg.checks.action_tolerance == cfg.raw["checks"]["action_tolerance"]
+    assert cfg.grid.mismatch_levels == tuple(cfg.raw["mismatch"]["sweep_magnitudes"])
+    assert cfg.grid.seeds_per_condition == cfg.raw["reporting"]["seeds_per_condition"]
+    band = cfg.raw["constraints"]
+    assert cfg.constraints.bounds() == {
+        k: (float(band[k][0]), float(band[k][1])) for k in ("co2_ppm", "air_temp_c", "rh_percent")
+    }
+
+
+@pytest.mark.parametrize(
+    ("block", "message"),
+    [
+        ({"checks": ChecksConfig(action_tolerance=-1.0)}, "action_tolerance"),
+        (
+            {"grid": GridConfig(mismatch_levels=(0.0,), seeds_per_condition=0)},
+            "seeds_per_condition",
+        ),
+        (
+            {
+                "constraints": ConstraintsConfig(
+                    co2_ppm=(1600.0, 300.0), air_temp_c=(15.0, 34.0), rh_percent=(50.0, 85.0)
+                )
+            },
+            "constraints.co2_ppm",
+        ),
+    ],
+)
+def test_validate_rejects_a_bad_typed_block(block: dict, message: str) -> None:
+    bad = BenchmarkConfig(
+        raw={},
+        gate=_OK_GATE,
+        generalisation=_OK_GEN,
+        episode=_OK_EPISODE,
+        **{**_OK_BLOCKS, **block},
+    )
+    with pytest.raises(ValueError, match=message):
+        bad.validate()
+
+
+def test_validate_refuses_a_terminal_weight_the_code_does_not_implement() -> None:
+    # the key stays for the planned RL-in-MPC arm; a value other than 0 cannot run
+    bad = BenchmarkConfig(
+        raw={},
+        gate=_OK_GATE,
+        generalisation=_OK_GEN,
+        episode=_OK_EPISODE,
+        mpc=MpcConfig(horizon_steps=4, terminal_weight=1.0),
+        **_OK_BLOCKS,
+    )
+    with pytest.raises(ValueError, match="terminal_weight must be 0"):
+        bad.validate()

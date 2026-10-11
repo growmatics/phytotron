@@ -203,18 +203,18 @@ def scenario_overrides(cfg: BenchmarkConfig) -> dict[str, Any]:
     weights are not passed: they shape only GreenLight-Gym2's own reward, which Phytotron
     does not score.
     """
-    band = cfg.raw["constraints"]
+    band = cfg.constraints
     if cfg.economic is None:
         raise ValueError("configs/benchmark.yaml has no economic block")
     ec = cfg.economic
     return {
         "constraints": {
-            "co2_min": float(band["co2_ppm"][0]),
-            "co2_max": float(band["co2_ppm"][1]),
-            "temp_min": float(band["air_temp_c"][0]),
-            "temp_max": float(band["air_temp_c"][1]),
-            "rh_min": float(band["rh_percent"][0]),
-            "rh_max": float(band["rh_percent"][1]),
+            "co2_min": float(band.co2_ppm[0]),
+            "co2_max": float(band.co2_ppm[1]),
+            "temp_min": float(band.air_temp_c[0]),
+            "temp_max": float(band.air_temp_c[1]),
+            "rh_min": float(band.rh_percent[0]),
+            "rh_max": float(band.rh_percent[1]),
         },
         "reward_params": {
             "fruit_price": ec.fruit_price,

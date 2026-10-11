@@ -141,7 +141,7 @@ Model-based controllers (the MPC) plan with a model. In the benchmark they never
 
 ## The grid, and what it can show
 
-The benchmark grid (`phytotron run`) runs each held-out year once per condition:
+The benchmark grid (`phytotron run`) runs each held-out year once per mismatch level:
 
 - **Incumbent**: one season per year, 4 in total. It has no model and the simulator is deterministic, so more seeds would repeat the same season. Its gate verdict is therefore always underpowered: 4 seasons cannot show a violation rate below 5 %.
 - **MPC**: at mismatch 0, one season per year (the model equals the simulator's for every seed); at each of the 5 levels above 0, 5 seeds per year, each seed a different perturbed model. That is 100 verdict seasons and 4 reference seasons.
@@ -158,7 +158,7 @@ So the gate can reach a verdict for the MPC, but only describe the incumbent. Th
 | Gate (Clopper-Pearson) | `phytotron/metrics/gate.py` |
 | Pareto front, hypervolume | `phytotron/metrics/pareto.py` |
 | Per-arm aggregation | `phytotron/benchmark.py`, `BenchmarkResult` |
-| Grid and summary | `phytotron/runner.py` |
+| Grid, one season, records, summary, provenance | `phytotron/grid.py`, `phytotron/season.py`, `phytotron/records.py`, `phytotron/summary.py`, `phytotron/provenance.py` |
 
 ## Sources for the crop rules
 

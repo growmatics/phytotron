@@ -61,7 +61,7 @@ def parse_specs(
     seed_sensitive: list[str] | None = None,
     reserved: tuple[str, ...] = (),
 ) -> dict[str, ArmSpec]:
-    """The custom arms from the command line, keyed by name, checked for clashes."""
+    """The registered arms from the command line, keyed by name, checked for clashes."""
     arms: dict[str, ArmSpec] = {}
     for text in texts or []:
         name, target = parse_spec(text)
@@ -116,7 +116,7 @@ def make_factory(obj: Any) -> Callable[[Any, Any, float, int], Any]:
     raise ValueError(f"controller target must be a class or a factory function, got {obj!r}")
 
 
-def build_custom(target: str, env: Any, cfg: Any, *, mismatch: float, seed: int) -> Any:
+def build_registered(target: str, env: Any, cfg: Any, *, mismatch: float, seed: int) -> Any:
     """A ready controller for one season from a ``module:attr`` target."""
     controller = make_factory(load_target(target))(env, cfg, mismatch, seed)
     for method in ("reset", "act"):
@@ -140,7 +140,7 @@ def target_source(target: str) -> dict[str, str]:
 
 
 def record_specs(arms: Mapping[str, ArmSpec]) -> dict[str, dict[str, Any]]:
-    """The custom arms as plain data for ``run_record.json``."""
+    """The registered arms as plain data for ``run_record.json``."""
     return {
         name: {
             "target": spec.target,
@@ -153,7 +153,7 @@ def record_specs(arms: Mapping[str, ArmSpec]) -> dict[str, dict[str, Any]]:
 
 
 def specs_from_record(run_record: Mapping[str, Any]) -> dict[str, ArmSpec]:
-    """The custom arms a run was launched with, from its run record."""
+    """The registered arms a run was launched with, from its run record."""
     return {
         name: ArmSpec(
             name, data["target"], bool(data["model_based"]), bool(data.get("seed_sensitive", False))

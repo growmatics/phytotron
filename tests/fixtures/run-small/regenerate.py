@@ -16,6 +16,7 @@ summary looks like, and say so in the commit message:
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,9 @@ import numpy as np
 
 from phytotron.config import load_config
 from phytotron.envs.glg2 import SeasonResult
-from phytotron.runner import Task, season_record, summarize
+from phytotron.grid import Task
+from phytotron.records import SEASON_KEYS, Attempt, FailureRecord, Record, season_record
+from phytotron.summary import summarize
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -51,7 +54,7 @@ def _season(
     net: float,
     climate: dict[str, np.ndarray] | None,
     humidity_exceedance: float = 0.0,
-) -> dict[str, Any]:
+) -> Record:
     task = Task(arm, year, mismatch, seed, DAYS)
     mpc = arm == "physics_mpc"
     result = SeasonResult(
@@ -73,33 +76,34 @@ def _season(
         max_action_excess=0.0,
         climate=climate,
     )
-    record = season_record(task, result)
-    record.update(
+    return replace(
+        season_record(task, result),
         started="2026-10-11T08:00:00+00:00",
         finished="2026-10-11T08:00:19+00:00",
         wall_seconds=19.0,
-        attempts=[],
+        attempts=(),
+        keys=(*SEASON_KEYS, "started", "finished", "wall_seconds", "attempts"),
     )
-    return record
 
 
 def _failure(
     arm: str, year: int, mismatch: float, seed: int, *, stage: str, error: str, retried: bool
-) -> dict[str, Any]:
+) -> Record:
     task = Task(arm, year, mismatch, seed, DAYS)
-    attempt = {"error": error, "stage": stage, "failed_at": "2026-10-11T07:30:40+00:00"}
-    return {
-        "task": task.__dict__,
-        "label": task.label,
-        "error": error,
-        "stage": stage,
-        "failed_at": "2026-10-11T08:00:40+00:00",
-        "traceback": "Traceback (most recent call last):\n  ...\n" + error + "\n",
-        "attempts": [attempt] if retried else [],
-    }
+    attempt = Attempt(error, stage, "2026-10-11T07:30:40+00:00")
+    return FailureRecord(
+        task=task,
+        label=task.label,
+        error=error,
+        stage=stage,
+        failed_at="2026-10-11T08:00:40+00:00",
+        traceback="Traceback (most recent call last):\n  ...\n" + error + "\n",
+        attempts=(attempt,) if retried else (),
+        keys=("task", "label", "error", "stage", "failed_at", "traceback", "attempts"),
+    )
 
 
-def build_records() -> dict[str, dict[str, Any]]:
+def build_records() -> dict[str, Record]:
     """The seven records, keyed by task key, in a fixed order."""
     calm = _climate(18.0, 80.0)
     hot_and_wet = _climate(35.0, 95.0)  # breaks every temperature and humidity rule
@@ -133,10 +137,10 @@ def build_records() -> dict[str, dict[str, Any]]:
             retried=True,
         ),
     ]
-    return {Task(**r["task"]).key: r for r in records}
+    return {r.task.key: r for r in records}
 
 
-def run_record(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def run_record(records: dict[str, Record]) -> dict[str, Any]:
     return {
         "timestamp": "2026-10-11T08:00:00+00:00",
         "git_commit": "fixture",
@@ -156,7 +160,7 @@ def write() -> None:
     for old in seasons.glob("*.json"):
         old.unlink()
     for key, record in records.items():
-        (seasons / f"{key}.json").write_text(json.dumps(record, indent=1) + "\n")
+        (seasons / f"{key}.json").write_text(json.dumps(record.to_json(), indent=1) + "\n")
     launch = run_record(records)
     (HERE / "run_record.json").write_text(json.dumps(launch, indent=1) + "\n")
     summary = summarize(records, cfg, launch)

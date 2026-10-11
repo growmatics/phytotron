@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "site"))
 
 import build_results  # noqa: E402
 import build_rules  # noqa: E402
+import figures  # noqa: E402
 
 CFG = load_config(ROOT / "configs" / "benchmark.yaml")
 NUMBER = r"-?\d+(?:[.,]\d+)?"
@@ -25,13 +26,13 @@ RULES = [(c, name, spec) for c in CFG.gate.soft_classes for name, spec in CFG.ga
 def test_rules_json_and_figures_are_up_to_date() -> None:
     doc = build_rules.build()
     assert build_rules.OUT.read_text() == build_rules.render(doc), "run python site/build_rules.py"
-    for name, svg in build_rules.render_figures(doc).items():
-        assert (build_rules.FIGURES_DIR / name).read_text() == svg, "run python site/build_rules.py"
+    for name, svg in figures.render_figures(doc).items():
+        assert (figures.FIGURES_DIR / name).read_text() == svg, "run python site/build_rules.py"
 
 
 def test_every_figure_is_referenced_with_alt_text() -> None:
     pages = "\n".join(p.read_text() for p in (ROOT / "site" / "content").glob("*.md"))
-    for name in build_rules.FIGURES:
+    for name in figures.FIGURES:
         match = re.search(rf"!\[([^\]]+)\]\(figures/{re.escape(name)}\)", pages)
         assert match and match.group(1).strip(), f"{name} is not referenced with alt text"
 
