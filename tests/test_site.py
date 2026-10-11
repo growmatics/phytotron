@@ -77,17 +77,20 @@ def test_results_were_scored_under_the_published_rules() -> None:
         assert doc["protocol"]["version"] < doc["rescored"]["protocol_version"]
 
 
-def test_every_number_in_results_prose_is_in_results_json() -> None:
-    """The page's sentences may repeat a number from the run, never invent one."""
+@pytest.mark.parametrize("page", ["results.md", "why-crop-safety-first.md"])
+def test_every_number_in_results_prose_is_in_results_json(page: str) -> None:
+    """A page's sentences may repeat a number from the run, never invent one."""
     doc = json.loads(build_results.OUT.read_text())
     known = _numbers(json.dumps(doc)) | _numbers(json.dumps(CFG.raw)) | {15, 34, 50, 85, 300, 1600}
-    body = (ROOT / "site" / "content" / "results.md").read_text().split("---", 2)[2]
+    body = (ROOT / "site" / "content" / page).read_text().split("---", 2)[2]
     body = re.sub(r"\]\([^)]*\)", "]()", body)  # link targets (release assets) are not prose
     for match in re.finditer(NUMBER, body.replace(MINUS, "-")):
         context = body[max(0, match.start() - 60) : match.end() + 20]
         if "day" in context or "minute" in context or "hour" in context or "%" in context:
             continue  # durations, dates and shares are rule or calendar numbers
-        assert float(match.group()) in known, f"{match.group()!r} in: {context.strip()}"
+        if re.fullmatch(r"(19|20)\d\d", match.group()):
+            continue  # a year (a source's or a season's)
+        assert float(match.group()) in known, f"{page}: {match.group()!r} in: {context.strip()}"
 
 
 def test_docs_results_tables_match_results_json() -> None:

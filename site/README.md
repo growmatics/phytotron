@@ -81,6 +81,9 @@ Files:
 - `content/bring-your-controller.md`: the page at `/phytotron/bring-your-controller`,
   a guide for controller authors. Plain Markdown, no placeholders. **Render it only when
   Growmatics names it for a build** (with the results page, after the code is public).
+- `content/why-crop-safety-first.md`: the article at `/phytotron/why-crop-safety-first`.
+  Same front matter (schema Article). Plain Markdown, two links into the other pages; no
+  placeholders. Render it with the results page.
 - `content/llms.txt`: text for `growmatics.ai/llms.txt` (or a section of it) and for an
   `llms.txt` entry pointing at the pages.
 

@@ -1,6 +1,6 @@
 # Phytotron by Growmatics
 
-> An open, simulated benchmark for greenhouse climate control. Controllers run through the same simulated tomato seasons (GreenLight model via GreenLight-Gym2, Amsterdam weather), are checked against six crop-safety rules taken from published horticultural sources, and only then are compared on net economic value and decision time. Developed and sponsored by Growmatics B.V. (Netherlands). License AGPL-3.0-or-later. Code public in Q4 2026. All results are simulated.
+> An open, simulated benchmark for greenhouse climate control. Controllers run through the same simulated tomato seasons (GreenLight model via GreenLight-Gym2, Amsterdam weather), are checked against six crop-safety rules taken from published horticultural sources, and only then are compared on net economic value and decision time. Developed and sponsored by Growmatics B.V. (Netherlands). License AGPL-3.0-or-later. Code public since 11 October 2026. All results are simulated.
 
 ## Pages
 
@@ -8,7 +8,8 @@
 - [Crop-safety rules](https://growmatics.ai/phytotron/crop-rules): six pass/fail rules for tomato temperature and humidity with their sources, and how seasons become a verdict.
 - [Bring your controller](https://growmatics.ai/phytotron/bring-your-controller): how to run your own controller (rule-based, MPC or RL) through the benchmark: the two-method interface, the six controls, one command for the full grid, the rule for model-based controllers. Published with the 0.1 code.
 - [Simulated results](https://growmatics.ai/phytotron/results): the two reference controllers (rule-based incumbent, economic MPC) on 108 simulated seasons, with verdicts, net value by model error, cost breakdown and what the rules found. Published with the 0.1 code.
+- [Why crop safety before profit](https://growmatics.ai/phytotron/why-crop-safety-first): an article on why a ranking on money alone rewards neglect in a simulator, what the horticultural literature says a tomato crop can take, what the first run showed, and how a rule was changed in the open.
 
 ## Code
 
-- [Repository](https://github.com/growmatics/phytotron): version 0.2.0, published 11 October 2026.
+- [Repository](https://github.com/growmatics/phytotron): version 0.2.0, published 11 October 2026, with the 108 season trace files of the first run as a release asset.

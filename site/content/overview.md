@@ -39,7 +39,7 @@ All Phytotron results are simulated. Phytotron is a benchmark and simulation too
 
 ## Progress
 
-- **11 October 2026.** Code public as version 0.1.0: the benchmark, the two reference controllers, the crop-safety gate, the `phytotron` command and the first simulated results, at [github.com/growmatics/phytotron](https://github.com/growmatics/phytotron).
+- **11 October 2026.** Code public at [github.com/growmatics/phytotron](https://github.com/growmatics/phytotron): the benchmark, the two reference controllers, the crop-safety gate, the `phytotron` command and the first simulated results (version 0.1.0), then the same day version 0.2.0 with the code restructured after an independent review and the 108 season trace files of the first run published with it.
 - **10 October 2026.** Crop-safety rules fixed from the sources, with a versioned protocol. First simulated run of the two reference controllers scored under them. The public repository opened with the project description. This site went live.
 
 ## Roadmap
