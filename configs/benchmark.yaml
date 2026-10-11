@@ -1,0 +1,175 @@
+# Single source of truth for Phytotron's benchmark constants.
+#
+# Every constant is defined once here. Code imports from this file and contains no
+# hardcoded magic numbers for anything defined here. A changed value is recorded in
+# CHANGELOG.md. Values and comments come from the benchmark of Growmatics' forthcoming
+# study of physics-informed greenhouse control on GreenLight-Gym2.
+#
+# Every top-level block says who reads it ("read by: ...") or that no code does
+# ("documentation only": the protocol's own description, kept in the one file everyone
+# opens first). Keys never change meaning or disappear within a minor version;
+# tests/test_config.py pins the set of blocks, so adding one is a conscious act.
+
+testbed:                    # read by: phytotron.commands.run_benchmark (the run record)
+  name: GreenLight-Gym2
+  repo: https://github.com/BartvLaatum/GreenLight-Gym2
+  release: v0.2.1            # 2025-08-18, commit 8bb5b28 (phytotron/scenarios checks the files)
+  env_id: GreenLightTomato-v0
+  license: AGPL-3.0
+  python: ">=3.11"
+  crop: tomato              # single-crop; generalisation is NOT across crop
+
+episode:                    # read by: phytotron.config (validate), phytotron.runner, phytotron.arms, phytotron.envs.glg2, site/build_rules.py
+  crop_days: 60
+  steps: 5760               # control steps; the runner records 5761 states (initial state + one per step)
+  timestep_seconds: 900
+
+controllers:                # documentation only: the four comparators (arms 1 to 4; see docs/README.md)
+  incumbent: rule-based setpoint (Het Nieuwe Telen / temperature integration); requires a documented competence standard
+  blackbox_rl: a trained RL policy run through the shared harness (any training library)
+  physics_only: economic MPC on the GreenLight equations (no learned part)
+  physics_informed: van Laatum RL-in-MPC (economic MPC + RL-learned terminal cost); planned, not yet in this repo
+
+mpc:                        # read by: phytotron.config, phytotron.arms (mpc_settings). The physics-only economic MPC arm
+  horizon_steps: 4          # x timestep_seconds = about one hour ahead
+  terminal_weight: 0.0      # no terminal cost; it is the RL-in-MPC arm's hook
+
+objective:                  # documentation only: what phytotron.runner and phytotron.benchmark implement
+  ranking: net_economic_value        # revenue minus energy and resource cost (NOT energy alone)
+  violations_handling: feasibility_gate   # native reward penalty is REMOVED from the objective and moved to the gate
+
+constraints:                # read by: phytotron.arms (the MPC's climate bounds); gate.classes drive the gate
+  co2_ppm: [300, 1600]      # class: physical
+  air_temp_c: [15, 34]      # class: physical
+  rh_percent: [50, 85]      # ceiling (85) -> soft crop-health (disease proxy)
+  hard_equipment: actuator saturation to [0,1] is enforced by the simulator; the lamp rule is class `lamp` in gate.classes   # documentation only
+
+gate:                       # read by: phytotron.config (GateConfig), phytotron.benchmark, phytotron.runner, site/build_rules.py
+  trial_unit: season        # documentation only: NOT timestep (autocorrelated); the gate counts seasons by construction
+  epsilon: 0.05             # soft-bound season-level violation tolerance
+  delta: 0.05               # confidence (95%)
+  method: clopper_pearson_one_sided_upper   # the one method phytotron.metrics.gate implements; validate() refuses another
+  n_seasons_min: 60         # rule of three ~ 3/epsilon; exact ceil(ln delta / ln(1-eps)) = 59
+  degree_hours: magnitude_times_duration   # documentation only: the safety profile reports C.h, %.h, ppm.h per class (phytotron.metrics.safety), not a threshold
+  # The verdict: model-based arms are gated over all seasons with mismatch above 0, pooled;
+  # mismatch 0 (the inverse-crime reference) is reported but never part of the verdict.
+  # Model-free arms are gated over all their seasons. Every mismatch level is also gated
+  # on its own and reported, flagged underpowered below n_seasons_min.
+  verdict: pooled_mismatch_above_zero
+  # Climate classes. kind "soft": gated (Clopper-Pearson above). kind "reported": safety
+  # profile only, never gated. A soft class has three per-season rules, all reported:
+  # - CROP RULES (`rules`, the primary gate): measures from
+  #   the crop literature plus a peak limit. A season breaks the class if any rule breaks.
+  #   Rule kinds are defined in phytotron/metrics/crop_rules.py; they read the season's
+  #   raw climate trace (C, %RH).
+  # - STRICT: any step outside the band. Saturates in practice.
+  # - BANDED (`banded`): more than `depth` outside for more than `min_hours` consecutive
+  #   hours. Kept as a sensitivity check; it fails every controller (docs/kpis.md).
+  primary: crop_rules
+  # Every number below traces to a source (named per rule; full list in docs/kpis.md).
+  # Fixed 2026-10-10 from a source check, before any result was scored under them.
+  rules_status: fixed
+  # Raised with every change to a rule, printed on every result. History in docs/kpis.md.
+  # 1 (2026-10-10): the six rules as fixed. 2 (2026-10-10): peak rule needs 30 minutes.
+  protocol_version: 2
+  classes:
+    humidity:
+      kind: soft
+      rules:
+        humid_hours:   # Yunis et al. 1994 (7 h/day leaf wetness, weekly mean; cucumber);
+                       # RH 90% as the leaf-wetness proxy, Sentelhas et al. 2008
+          {kind: daily_hours, threshold: 90.0, max_hours_per_day: 7.0, window_days: 7}
+        longest_run:   # Körner 2003 thesis (chrysanthemum); the 48 h is his modelling choice
+          {kind: longest_run, threshold: 93.0, max_hours: 48.0}
+      banded: {depth: 2.0, min_hours: 1.0}   # RH percentage points; sensitivity check only
+    temperature:
+      kind: soft
+      rules:
+        mean_6d:       # 6-day mean within +/- 4 C (Körner and Challa 2003) of a target that
+                       # follows daily outdoor light, 17.5 C + 1.5 C per 1000 J/cm2
+                       # (Het Nieuwe Telen Tomaat 2010)
+          {kind: light_mean, base: 17.5, per_1000_j_cm2: 1.5, band: 4.0, window_days: 6}
+        mean_24h:      # Adams et al. 2001: poor fruit set and yield at a 26 C mean
+          {kind: rolling_mean, window_h: 24, high: 26.0}
+        dose:          # Körner and Challa 2003, Eq. 3 and 4: onsets 14 and 30 C, limits
+                       # 10 and 34 C, full dose 30 min at a limit; summed over any 24 h
+          {kind: dose, onset_low: 14.0, limit_low: 10.0, onset_high: 30.0, limit_high: 34.0,
+           full_dose_min: 30.0, window_h: 24, heat_exponent: 160.0, cold_exponent: 30.0}
+        peak:          # Körner and Challa 2003 absolute limits; GreenLight's own 50%
+                       # growth-inhibition points (Vanthoor 2011). Protocol 2: beyond a
+                       # limit for 30 min or more (Körner and Challa's full-dose time);
+                       # protocol 1 had min_minutes 0 (any step).
+          {kind: peak, low: 10.0, high: 34.0, min_minutes: 30.0}
+      banded: {depth: 2.0, min_hours: 1.0}   # C; sensitivity check only
+    co2:
+      kind: reported         # mostly a yield question, already priced in net value
+    lamp:
+      kind: reported         # lamp use after 20:00
+
+pareto:                     # documentation only: the choices phytotron.runner._pareto implements
+  axes: [net_economic_value_heldout, online_cost]
+  reference_point: anti_ideal             # worst value on each axis (the incumbent is cost-optimal and cannot anchor HV); improvement-over-incumbent = HV(front) - HV(incumbent)
+  normalization: minmax_per_axis_over_gate_passers
+  reported_per: mismatch_level            # zero-mismatch front is a labelled inverse-crime reference only
+
+mismatch:                   # read by: phytotron.runner (sweep_magnitudes); the rest documentation only. Inverse-crime defence
+  physics_arms_receive_ground_truth: false   # arms 3,4 get a NOMINAL model only
+  mechanism: greenlight_parameter_sampling   # 208 params; perturb controller nominal vs sim true
+  sweep_magnitudes: [0.0, 0.025, 0.05, 0.10, 0.15, 0.20]   # 0.0 = labelled inverse-crime reference (controller model equals the simulator)
+  injections: [parametric]   # built: GreenLight parameter perturbation (phytotron.mismatch)
+  # planned: reduced_order_structural, actuator_delay_saturation, forecast_error, sensor_drift, rh_disease_proxy
+
+generalisation:             # read by: phytotron.config (location, season_start_day, season_length_days, weather years); vary, weather_source and regenerate_cmd documentation only
+  vary: [weather_year]                 # planned: construction_params. NOT crop (single-crop sim)
+  location: Amsterdam_OM               # 52.37 N, 4.90 E
+  weather_source: Open-Meteo archive (free, keyless); real historical years
+  regenerate_cmd: "python examples/fetch_weather.py --lat 52.37 --lon 4.90 --years 2014-2025 --location Amsterdam_OM --weather-dir <weather_dir>"
+  season_start_day: 59                 # ~1 March; 60-day season
+  season_length_days: 60
+  # Most recent 12 COMPLETE years (2026 is incomplete and Open-Meteo will not
+  # serve a full future year). Chronological split: train on past years, hold
+  # out the 4 most recent (incl. the newest 2024-2025), so the benchmark tests
+  # generalisation to recent seasons; held-out spans season-mean-T ~7.4-9.1 C.
+  weather_years_train: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
+  weather_years_heldout: [2022, 2023, 2024, 2025]
+  # planned: crop parameters vary between train and held-out seasons; today only the weather year varies
+
+checks:                     # read by: phytotron.runner (season_problems). A season that fails a check is a failed season
+  action_tolerance: 1.0e-6  # a control may leave its range by at most this (solver round-off)
+
+reporting:                  # read by: phytotron.runner (seeds_per_condition); distributions documentation only (planned)
+  seeds_per_condition: 5               # seeds 0..4, for RL training and mismatch draws
+  distributions: mean_and_sd           # per arm and per mismatch level; planned: bootstrap CIs and performance profiles
+
+economic:                   # read by: phytotron.config (EconomicConfig) for the MPC's objective (GLG2 GreenhouseReward, EPI form)
+  # Prices and dmfm equal GreenLight-Gym2 v0.2.1's GreenhouseReward defaults
+  # (gl_gym/configs/envs/TomatoEnv.yml, reward_params). The three penalty weights are the
+  # soft-constraint weights of Msaad, Harraway and McAllister (2025), "RL-Guided MPC for
+  # Autonomous Greenhouse Control", arXiv:2506.13278, Table 2: CO2 5e-5, temperature 5e-3,
+  # RH 7e-4. Temperature and RH equal GreenLight-Gym2's reward weights; its CO2 weight is
+  # 4e-4, so GreenLight-Gym2's own reward is not what the MPC optimises (docs/mpc.md).
+  fruit_price_eur_per_kg_fw: 1.6      # €/kg fresh weight; effective €/kgDW = fruit_price/dmfm
+  dmfm: 0.065                         # dry-matter / fresh-matter ratio
+  heating_price_eur_per_kwh: 0.09
+  co2_price_eur_per_kg: 0.30
+  elec_price_eur_per_kwh: 0.30
+  penalty_weights: [5.0e-5, 5.0e-3, 7.0e-4]   # order [CO2, temp, RH]; lambda in GreenhouseReward
+  param_indices:            # GreenLight p[] indices for the cost conversions (from rewards.py)
+    floor_area: 46
+    heat_power: 108
+    co2_capacity: 109
+    lamp_power: 172
+  fruit_state_index: 25     # x[25] cFruit dry matter [mg m^-2]
+  cost_input_indices: [0, 1, 4]   # heating u[0], CO2 u[1], lamp u[4]
+
+l5_reproduction:            # read by: phytotron.config (l5_economic), examples/l5_reproduce.py. van Laatum et al. 2026 standalone-MPC reproduction (overrides economic:)
+  source: vanlaatum2026rlmpc        # arXiv:2607.07365, Tables 5-6
+  weather: {location: Bleiswijk, year: 2023, day_of_year: 151, file: KASPRO2023.csv}
+  timestep_seconds: 300
+  horizon_steps: 12         # 1 hour
+  sim_steps: 288            # 1 day
+  bounds: {air_temp_c: [10, 25], co2_ppm: [400, 1600], rh_percent: [0, 90]}
+  fruit_price_eur_per_kg_fw: 1.2    # -> c_frt = 1.2/0.06 = 20 €/kg{DW} (paper)
+  dmfm: 0.06
+  elec_price_eur_per_kwh: 0.20
+  targets: {epi: -0.004, penalty: 0.024, objective: -0.028}   # their reported standalone-MPC numbers

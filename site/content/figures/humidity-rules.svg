@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 168" width="760" height="168" role="img" aria-label="Humidity rules on one scale from 80 to 100 percent RH" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12">
+  <title>Humidity rules on one scale from 80 to 100 percent RH</title>
+  <text x="50" y="18" fill="#1f2a44" text-anchor="start" font-weight="600">humid hours</text>
+  <rect x="380" y="24" width="330" height="16" fill="#d6e6f1" stroke="#2b6c97"/>
+  <text x="384" y="36" fill="#2b6c97" text-anchor="start">above 90: counts; 7-day mean at most 7 h/day</text>
+  <text x="50" y="62" fill="#1f2a44" text-anchor="start" font-weight="600">longest run</text>
+  <rect x="479" y="68" width="231" height="16" fill="#2b6c97" fill-opacity=".75"/>
+  <text x="475" y="80" fill="#5b6470" text-anchor="end">above 93: no run over 48 h</text>
+  <text x="50" y="104" fill="#1f2a44" text-anchor="start" font-weight="600">grower practice</text>
+  <rect x="215" y="110" width="66" height="10" fill="#2c6a4c" fill-opacity=".6"/>
+  <rect x="479" y="110" width="33" height="10" fill="#2c6a4c" fill-opacity=".6"/>
+  <text x="285" y="119" fill="#5b6470" text-anchor="start">mean RH 85 to 87</text>
+  <text x="516" y="119" fill="#5b6470" text-anchor="start">daily peak 93 to 94</text>
+  <line x1="50" y1="140" x2="710" y2="140" stroke="#cfd4db"/>
+  <line x1="50" y1="140" x2="50" y2="145" stroke="#5b6470"/>
+  <text x="50" y="158" fill="#5b6470" text-anchor="middle">80</text>
+  <line x1="116" y1="140" x2="116" y2="145" stroke="#5b6470"/>
+  <text x="116" y="158" fill="#5b6470" text-anchor="middle">82</text>
+  <line x1="182" y1="140" x2="182" y2="145" stroke="#5b6470"/>
+  <text x="182" y="158" fill="#5b6470" text-anchor="middle">84</text>
+  <line x1="248" y1="140" x2="248" y2="145" stroke="#5b6470"/>
+  <text x="248" y="158" fill="#5b6470" text-anchor="middle">86</text>
+  <line x1="314" y1="140" x2="314" y2="145" stroke="#5b6470"/>
+  <text x="314" y="158" fill="#5b6470" text-anchor="middle">88</text>
+  <line x1="380" y1="140" x2="380" y2="145" stroke="#5b6470"/>
+  <text x="380" y="158" fill="#5b6470" text-anchor="middle">90</text>
+  <line x1="446" y1="140" x2="446" y2="145" stroke="#5b6470"/>
+  <text x="446" y="158" fill="#5b6470" text-anchor="middle">92</text>
+  <line x1="512" y1="140" x2="512" y2="145" stroke="#5b6470"/>
+  <text x="512" y="158" fill="#5b6470" text-anchor="middle">94</text>
+  <line x1="578" y1="140" x2="578" y2="145" stroke="#5b6470"/>
+  <text x="578" y="158" fill="#5b6470" text-anchor="middle">96</text>
+  <line x1="644" y1="140" x2="644" y2="145" stroke="#5b6470"/>
+  <text x="644" y="158" fill="#5b6470" text-anchor="middle">98</text>
+  <line x1="710" y1="140" x2="710" y2="145" stroke="#5b6470"/>
+  <text x="710" y="158" fill="#5b6470" text-anchor="middle">100 %RH</text>
+</svg>

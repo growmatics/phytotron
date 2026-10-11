@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 140" width="760" height="140" role="img" aria-label="How Phytotron judges a controller, in four stages" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12">
+  <title>How Phytotron judges a controller, in four stages</title>
+  <rect x="14" y="14" width="172" height="86" fill="#dcebe2" rx="6" stroke="#cfd4db"/>
+  <text x="26" y="38" fill="#1f2a44" text-anchor="start" font-weight="600">Same seasons</text>
+  <text x="26" y="58" fill="#5b6470" text-anchor="start">one simulated</text>
+  <text x="26" y="73" fill="#5b6470" text-anchor="start">greenhouse, held-out</text>
+  <text x="26" y="88" fill="#5b6470" text-anchor="start">weather years</text>
+  <path d="M190 57 h8 m-6 -5 l6 5 l-6 5" fill="none" stroke="#5b6470" stroke-width="1.5"/>
+  <rect x="204" y="14" width="172" height="86" fill="#dcebe2" rx="6" stroke="#cfd4db"/>
+  <text x="216" y="38" fill="#1f2a44" text-anchor="start" font-weight="600">Model error on purpose</text>
+  <text x="216" y="58" fill="#5b6470" text-anchor="start">deliberately wrong model</text>
+  <text x="216" y="73" fill="#5b6470" text-anchor="start">parameters</text>
+  <path d="M380 57 h8 m-6 -5 l6 5 l-6 5" fill="none" stroke="#5b6470" stroke-width="1.5"/>
+  <rect x="394" y="14" width="172" height="86" fill="#f3d9d2" rx="6" stroke="#cfd4db"/>
+  <text x="406" y="38" fill="#1f2a44" text-anchor="start" font-weight="600">Crop-safety gate</text>
+  <text x="406" y="58" fill="#5b6470" text-anchor="start">at most 5% of seasons</text>
+  <text x="406" y="73" fill="#5b6470" text-anchor="start">break a rule (95%</text>
+  <text x="406" y="88" fill="#5b6470" text-anchor="start">confidence)</text>
+  <path d="M570 57 h8 m-6 -5 l6 5 l-6 5" fill="none" stroke="#5b6470" stroke-width="1.5"/>
+  <rect x="584" y="14" width="172" height="86" fill="#d6e6f1" rx="6" stroke="#cfd4db"/>
+  <text x="596" y="38" fill="#1f2a44" text-anchor="start" font-weight="600">Economics</text>
+  <text x="596" y="58" fill="#5b6470" text-anchor="start">net value per m2 and</text>
+  <text x="596" y="73" fill="#5b6470" text-anchor="start">decision time</text>
+  <text x="14" y="124" fill="#5b6470" text-anchor="start">A controller that fails the gate is reported but never ranked. All results are simulated.</text>
+</svg>

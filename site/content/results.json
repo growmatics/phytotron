@@ -1,0 +1,510 @@
+{
+  "generated_from": {
+    "run": "results/2026-10-10-run-2",
+    "phytotron_commit": "1fb0045",
+    "config_sha256": "a9946acc69529a4738f6f03258537e883138c2dde21cbfab048bca4896fde315",
+    "simulator": "GreenLight-Gym2 v0.2.1 (8bb5b28)",
+    "date": "2026-10-10",
+    "packages": {
+      "python": "3.12.3",
+      "phytotron": "0.0.0",
+      "gl-gym": "0.2.0",
+      "numpy": "1.26.4",
+      "scipy": "1.16.1",
+      "casadi": "3.6.7"
+    },
+    "workers": 18,
+    "season_days": 60,
+    "seasons_run": 108,
+    "seasons_failed": 0,
+    "seasons_not_started": 0,
+    "recorded_states_per_season": 5761
+  },
+  "protocol": {
+    "version": 1,
+    "verdict": "pooled_mismatch_above_zero",
+    "gated_classes": [
+      "humidity",
+      "temperature"
+    ],
+    "rules": {
+      "humidity": {
+        "humid_hours": {
+          "kind": "daily_hours",
+          "threshold": 90.0,
+          "max_hours_per_day": 7.0,
+          "window_days": 7
+        },
+        "longest_run": {
+          "kind": "longest_run",
+          "threshold": 93.0,
+          "max_hours": 48.0
+        }
+      },
+      "temperature": {
+        "mean_6d": {
+          "kind": "light_mean",
+          "base": 17.5,
+          "per_1000_j_cm2": 1.5,
+          "band": 4.0,
+          "window_days": 6
+        },
+        "mean_24h": {
+          "kind": "rolling_mean",
+          "window_h": 24,
+          "high": 26.0
+        },
+        "dose": {
+          "kind": "dose",
+          "onset_low": 14.0,
+          "limit_low": 10.0,
+          "onset_high": 30.0,
+          "limit_high": 34.0,
+          "full_dose_min": 30.0,
+          "window_h": 24,
+          "heat_exponent": 160.0,
+          "cold_exponent": 30.0
+        },
+        "peak": {
+          "kind": "peak",
+          "low": 10.0,
+          "high": 34.0
+        }
+      }
+    },
+    "band": {
+      "humidity": [
+        2.0,
+        1.0
+      ],
+      "temperature": [
+        2.0,
+        1.0
+      ]
+    }
+  },
+  "rescored": {
+    "protocol_version": 2,
+    "rules": {
+      "humidity": {
+        "humid_hours": {
+          "kind": "daily_hours",
+          "threshold": 90.0,
+          "max_hours_per_day": 7.0,
+          "window_days": 7
+        },
+        "longest_run": {
+          "kind": "longest_run",
+          "threshold": 93.0,
+          "max_hours": 48.0
+        }
+      },
+      "temperature": {
+        "mean_6d": {
+          "kind": "light_mean",
+          "base": 17.5,
+          "per_1000_j_cm2": 1.5,
+          "band": 4.0,
+          "window_days": 6
+        },
+        "mean_24h": {
+          "kind": "rolling_mean",
+          "window_h": 24,
+          "high": 26.0
+        },
+        "dose": {
+          "kind": "dose",
+          "onset_low": 14.0,
+          "limit_low": 10.0,
+          "onset_high": 30.0,
+          "limit_high": 34.0,
+          "full_dose_min": 30.0,
+          "window_h": 24,
+          "heat_exponent": 160.0,
+          "cold_exponent": 30.0
+        },
+        "peak": {
+          "kind": "peak",
+          "low": 10.0,
+          "high": 34.0,
+          "min_minutes": 30.0
+        }
+      }
+    },
+    "file": "results/2026-10-10-run-2/summary-protocol-2.json",
+    "gate_passers": [],
+    "arms": [
+      {
+        "arm": "incumbent",
+        "name": "Incumbent (rule-based)",
+        "seasons": 4,
+        "breaks_before": {
+          "mean_6d": 0,
+          "mean_24h": 0,
+          "dose": 3,
+          "peak": 4,
+          "humid_hours": 0,
+          "longest_run": 0
+        },
+        "breaks_after": {
+          "mean_6d": 0,
+          "mean_24h": 0,
+          "dose": 3,
+          "peak": 0,
+          "humid_hours": 0,
+          "longest_run": 0
+        },
+        "class_failures_before": {
+          "humidity": 0,
+          "temperature": 4
+        },
+        "class_failures_after": {
+          "humidity": 0,
+          "temperature": 3
+        },
+        "verdict": {
+          "arm": "incumbent",
+          "name": "Incumbent (rule-based)",
+          "seasons": 4,
+          "net_mean": -2.74,
+          "net_sd": 5.41,
+          "classes": {
+            "humidity": {
+              "failing": 0,
+              "seasons": 4,
+              "upper_bound": "52.7%"
+            },
+            "temperature": {
+              "failing": 3,
+              "seasons": 4,
+              "upper_bound": "98.7%"
+            }
+          },
+          "gate": "fail",
+          "underpowered": true
+        }
+      },
+      {
+        "arm": "physics_mpc",
+        "name": "Economic MPC",
+        "seasons": 104,
+        "breaks_before": {
+          "mean_6d": 77,
+          "mean_24h": 0,
+          "dose": 104,
+          "peak": 95,
+          "humid_hours": 2,
+          "longest_run": 0
+        },
+        "breaks_after": {
+          "mean_6d": 77,
+          "mean_24h": 0,
+          "dose": 104,
+          "peak": 93,
+          "humid_hours": 2,
+          "longest_run": 0
+        },
+        "class_failures_before": {
+          "humidity": 2,
+          "temperature": 104
+        },
+        "class_failures_after": {
+          "humidity": 2,
+          "temperature": 104
+        },
+        "verdict": {
+          "arm": "physics_mpc",
+          "name": "Economic MPC",
+          "seasons": 100,
+          "net_mean": -4.8,
+          "net_sd": 2.67,
+          "classes": {
+            "humidity": {
+              "failing": 2,
+              "seasons": 100,
+              "upper_bound": "6.2%"
+            },
+            "temperature": {
+              "failing": 100,
+              "seasons": 100,
+              "upper_bound": "100.0%"
+            }
+          },
+          "gate": "fail",
+          "underpowered": false
+        }
+      }
+    ]
+  },
+  "trace_facts": {
+    "source": "the per-season files with climate traces of this run (not in the repository)",
+    "wall_minutes": 136,
+    "mpc_seasons_below_limit": 95,
+    "mpc_seasons_below_limit_after_day_1": 46,
+    "mpc_seasons_above_limit": 2,
+    "incumbent_dips_below_limit": {
+      "2022/m0.00": {
+        "steps": 2,
+        "days": [
+          5.6,
+          31.6
+        ],
+        "all_single_steps": true
+      },
+      "2023/m0.00": {
+        "steps": 2,
+        "days": [
+          1.4,
+          10.7
+        ],
+        "all_single_steps": true
+      },
+      "2024/m0.00": {
+        "steps": 1,
+        "days": [
+          10.3
+        ],
+        "all_single_steps": true
+      },
+      "2025/m0.00": {
+        "steps": 2,
+        "days": [
+          4.3,
+          13.7
+        ],
+        "all_single_steps": true
+      }
+    },
+    "incumbent_dips_per_season_min_max": [
+      1,
+      2
+    ],
+    "incumbent_dip_days_min_max": [
+      1.4,
+      31.6
+    ]
+  },
+  "gate_passers": [],
+  "verdicts": [
+    {
+      "arm": "incumbent",
+      "name": "Incumbent (rule-based)",
+      "seasons": 4,
+      "net_mean": -2.74,
+      "net_sd": 5.41,
+      "classes": {
+        "humidity": {
+          "failing": 0,
+          "seasons": 4,
+          "upper_bound": "52.7%"
+        },
+        "temperature": {
+          "failing": 4,
+          "seasons": 4,
+          "upper_bound": "100.0%"
+        }
+      },
+      "gate": "fail",
+      "underpowered": true
+    },
+    {
+      "arm": "physics_mpc",
+      "name": "Economic MPC",
+      "seasons": 100,
+      "net_mean": -4.8,
+      "net_sd": 2.67,
+      "classes": {
+        "humidity": {
+          "failing": 2,
+          "seasons": 100,
+          "upper_bound": "6.2%"
+        },
+        "temperature": {
+          "failing": 100,
+          "seasons": 100,
+          "upper_bound": "100.0%"
+        }
+      },
+      "gate": "fail",
+      "underpowered": false
+    }
+  ],
+  "mpc_by_mismatch": [
+    {
+      "mismatch": "0 (reference)",
+      "seasons": 4,
+      "net_mean": -3.06,
+      "net_sd": 0.9,
+      "fruit_kg_m2": 5.68,
+      "solve_success": 0.999,
+      "breaks": {
+        "mean_6d": 4,
+        "mean_24h": 0,
+        "dose": 4,
+        "peak": 4,
+        "humid_hours": 0,
+        "longest_run": 0
+      }
+    },
+    {
+      "mismatch": "2.5%",
+      "seasons": 20,
+      "net_mean": -3.43,
+      "net_sd": 1.37,
+      "fruit_kg_m2": 5.66,
+      "solve_success": 0.999,
+      "breaks": {
+        "mean_6d": 20,
+        "mean_24h": 0,
+        "dose": 20,
+        "peak": 20,
+        "humid_hours": 0,
+        "longest_run": 0
+      }
+    },
+    {
+      "mismatch": "5.0%",
+      "seasons": 20,
+      "net_mean": -3.44,
+      "net_sd": 1.91,
+      "fruit_kg_m2": 5.58,
+      "solve_success": 0.999,
+      "breaks": {
+        "mean_6d": 17,
+        "mean_24h": 0,
+        "dose": 20,
+        "peak": 19,
+        "humid_hours": 0,
+        "longest_run": 0
+      }
+    },
+    {
+      "mismatch": "10.0%",
+      "seasons": 20,
+      "net_mean": -4.01,
+      "net_sd": 2.46,
+      "fruit_kg_m2": 5.15,
+      "solve_success": 0.998,
+      "breaks": {
+        "mean_6d": 12,
+        "mean_24h": 0,
+        "dose": 20,
+        "peak": 18,
+        "humid_hours": 0,
+        "longest_run": 0
+      }
+    },
+    {
+      "mismatch": "15.0%",
+      "seasons": 20,
+      "net_mean": -5.63,
+      "net_sd": 1.95,
+      "fruit_kg_m2": 4.09,
+      "solve_success": 0.991,
+      "breaks": {
+        "mean_6d": 12,
+        "mean_24h": 0,
+        "dose": 20,
+        "peak": 17,
+        "humid_hours": 0,
+        "longest_run": 0
+      }
+    },
+    {
+      "mismatch": "20.0%",
+      "seasons": 20,
+      "net_mean": -7.52,
+      "net_sd": 2.81,
+      "fruit_kg_m2": 4.1,
+      "solve_success": 0.954,
+      "breaks": {
+        "mean_6d": 12,
+        "mean_24h": 0,
+        "dose": 20,
+        "peak": 17,
+        "humid_hours": 2,
+        "longest_run": 0
+      }
+    }
+  ],
+  "money": [
+    {
+      "arm": "incumbent",
+      "name": "Incumbent (rule-based)",
+      "seasons": 4,
+      "revenue": 17.69,
+      "heating": 8.46,
+      "co2": 2.0,
+      "electricity": 9.98,
+      "net": -2.74,
+      "fruit_kg_m2": 11.06,
+      "decision_ms": 0.2,
+      "night_humidity_deficit_g_m3": 2.39,
+      "breaks": {
+        "mean_6d": 0,
+        "mean_24h": 0,
+        "dose": 3,
+        "peak": 4,
+        "humid_hours": 0,
+        "longest_run": 0
+      },
+      "by_year": {
+        "2022": 2.04,
+        "2023": -9.44,
+        "2024": -6.65,
+        "2025": 3.09
+      }
+    },
+    {
+      "arm": "physics_mpc",
+      "name": "Economic MPC",
+      "seasons": 104,
+      "revenue": 7.91,
+      "heating": 8.91,
+      "co2": 1.35,
+      "electricity": 2.39,
+      "net": -4.74,
+      "fruit_kg_m2": 4.95,
+      "decision_ms": 193.4,
+      "night_humidity_deficit_g_m3": 2.32,
+      "breaks": {
+        "mean_6d": 77,
+        "mean_24h": 0,
+        "dose": 104,
+        "peak": 95,
+        "humid_hours": 2,
+        "longest_run": 0
+      },
+      "by_year": {
+        "2022": -3.84,
+        "2023": -6.24,
+        "2024": -5.7,
+        "2025": -3.16
+      }
+    }
+  ],
+  "safety": [
+    {
+      "arm": "incumbent",
+      "name": "Incumbent (rule-based)",
+      "temperature_hours": 60,
+      "temperature_degree_hours": 73,
+      "temperature_worst_c": 6.0,
+      "humidity_hours": 488,
+      "humidity_degree_hours": 852,
+      "humidity_worst_points": 10.9,
+      "co2_seasons_with_excursion": 0
+    },
+    {
+      "arm": "physics_mpc",
+      "name": "Economic MPC",
+      "temperature_hours": 448,
+      "temperature_degree_hours": 480,
+      "temperature_worst_c": 13.4,
+      "humidity_hours": 387,
+      "humidity_degree_hours": 900,
+      "humidity_worst_points": 12.0,
+      "co2_seasons_with_excursion": 4
+    }
+  ]
+}

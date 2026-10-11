@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "If you use Phytotron, please cite it as below."
+title: "Phytotron: an open virtual phytotron for benchmarking greenhouse climate control"
+type: software
+authors:
+  - name: "Growmatics B.V."
+    country: NL
+    website: "https://growmatics.ai"
+repository-code: "https://github.com/growmatics/phytotron"
+url: "https://growmatics.ai/phytotron"
+license: AGPL-3.0-or-later
+version: 0.1.0
+date-released: "2026-10-11"
+keywords:
+  - greenhouse climate control
+  - benchmark
+  - model predictive control
+  - reinforcement learning
+  - tomato
+  - crop safety
+abstract: >-
+  Phytotron is an open, simulated benchmark for greenhouse climate control. Controllers
+  run through the same simulated tomato seasons (GreenLight model via GreenLight-Gym2),
+  are checked against crop-safety rules taken from published horticultural sources, and
+  only then are compared on net economic value and decision time. All results are
+  simulated.
+references:
+  - type: software
+    title: "GreenLight-Gym2"
+    authors:
+      - family-names: "van Laatum"
+        given-names: "Bart"
+    repository-code: "https://github.com/BartvLaatum/GreenLight-Gym2"
+    version: "0.2.1"
+    license: AGPL-3.0
+  - type: software
+    title: "GreenLight"
+    authors:
+      - family-names: "Katzin"
+        given-names: "David"
+    repository-code: "https://github.com/davkat1/GreenLight"

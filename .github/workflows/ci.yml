@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]  # 3.12 is what the recorded runs used
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install --upgrade pip setuptools
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy phytotron site
+      - run: pytest
+      # Known vulnerabilities in dependencies. Every ignored ID needs a reason here.
+      # CVE-2026-77387 (geopy 2.4.1, regex DoS in Point parsing): GreenLight-Gym2 v0.2.1
+      # pins geopy==2.4.1, and neither Phytotron nor gl_gym's package code imports geopy.
+      # Revisit whenever the GreenLight-Gym2 pin in pyproject.toml moves.
+      - run: pip-audit --skip-editable --ignore-vuln CVE-2026-77387

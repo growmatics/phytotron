@@ -1,0 +1,5535 @@
+{
+ "record": {
+  "git_commit": "1fb0045",
+  "git_dirty": false,
+  "config_sha256": "a9946acc69529a4738f6f03258537e883138c2dde21cbfab048bca4896fde315",
+  "testbed": "v0.2.1",
+  "glg2_checkout_commit": "8bb5b28",
+  "timestamp": "2026-10-10T13:58:25",
+  "timezone": "CEST (UTC+0200)",
+  "workers": 18,
+  "packages": {
+   "python": "3.12.3",
+   "phytotron": "0.0.0",
+   "gl-gym": "0.2.0",
+   "numpy": "1.26.4",
+   "scipy": "1.16.1",
+   "casadi": "3.6.7"
+  },
+  "inputs_sha256": {
+   "glg2/envs/TomatoEnv.yml": "974a734e020be3a068b35ff3afd9b995d544309d70583577ffb3467b895f4c0d",
+   "glg2/agents/rule_based.yml": "88546ddbe25cc2033eca95de08f4d957ef2d0ea8f54195242496437584c02463",
+   "weather/Amsterdam_OM/2022.csv": "b7ee1ace601f47d022a870bc50ff713f5817b64c4e5aa49af84b6e48706074a2",
+   "weather/Amsterdam_OM/2023.csv": "289fcaa56bba858e53c335469c7853f13c60df3813bb44bd80bdecc2400915d9",
+   "weather/Amsterdam_OM/2024.csv": "f969d717af407a31c45a888c1958cde85d9b288bb21f2acec364584798db57a9",
+   "weather/Amsterdam_OM/2025.csv": "19df0ed4be6cf260df17a71e3625dc3df78badf174601fa241d35447905241b5"
+  },
+  "arm_settings": {
+   "incumbent": {
+    "lamps_on": 0,
+    "lamps_off": 18,
+    "lamps_day_start": -1,
+    "lamps_day_stop": 366,
+    "lamps_off_sun": 400,
+    "lamp_rad_sum_limit": 10,
+    "temp_setpoint_day": 19.5,
+    "temp_setpoint_night": 16.5,
+    "heat_correction": 0,
+    "heat_deadzone": 5,
+    "co2_day": 800,
+    "vent_heat_Pband": 4,
+    "rh_max": 85,
+    "mech_dehumid_Pband": 2,
+    "vent_rh_Pband": 5,
+    "t_vent_off": 1,
+    "vent_cold_Pband": -1,
+    "thScrSpDay": 5,
+    "thScrSpNight": 10,
+    "thScrPband": -1,
+    "thScrDeadZone": 4,
+    "thScrRh": -2,
+    "thScrRhPband": 2,
+    "lampExtraHeat": 2,
+    "blScrExtraRh": 100,
+    "rhMax": 85,
+    "tHeatBand": -1,
+    "co2Band": -100,
+    "useBlScr": 1
+   },
+   "physics_mpc": {
+    "horizon": 4,
+    "dt": 900.0,
+    "objective": "economic",
+    "economic": {
+     "fruit_price": 1.6,
+     "dmfm": 0.065,
+     "heating_price": 0.09,
+     "co2_price": 0.3,
+     "elec_price": 0.3,
+     "penalty_weights": [
+      5e-05,
+      0.005,
+      0.0007
+     ],
+     "param_indices": {
+      "floor_area": 46,
+      "heat_power": 108,
+      "co2_capacity": 109,
+      "lamp_power": 172
+     },
+     "fruit_state_index": 25,
+     "cost_input_indices": [
+      0,
+      1,
+      4
+     ]
+    },
+    "climate_bounds": {
+     "co2_ppm": [
+      300,
+      1600
+     ],
+     "air_temp_c": [
+      15,
+      34
+     ],
+     "rh_percent": [
+      50,
+      85
+     ]
+    },
+    "terminal_weight": 0.0
+   }
+  },
+  "season_days": 60,
+  "smoke": false,
+  "grid": {
+   "arms": [
+    "incumbent",
+    "physics_mpc"
+   ],
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "mismatch_levels": [
+    0.0,
+    0.025,
+    0.05,
+    0.1,
+    0.15,
+    0.2
+   ],
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "seasons": 108
+  },
+  "hardware": {
+   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+   "processor": "x86_64",
+   "cpu_count": 22,
+   "python": "3.12.3",
+   "threads": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+   }
+  },
+  "n_failed_seasons": 0,
+  "failed_seasons": []
+ },
+ "protocol": {
+  "version": 2,
+  "verdict": "pooled_mismatch_above_zero",
+  "gated_classes": [
+   "humidity",
+   "temperature"
+  ],
+  "bands": {
+   "humidity": [
+    2.0,
+    1.0
+   ],
+   "temperature": [
+    2.0,
+    1.0
+   ]
+  },
+  "primary_gate": "crop_rules",
+  "rules_status": "fixed",
+  "rules": {
+   "humidity": {
+    "humid_hours": {
+     "kind": "daily_hours",
+     "threshold": 90.0,
+     "max_hours_per_day": 7.0,
+     "window_days": 7
+    },
+    "longest_run": {
+     "kind": "longest_run",
+     "threshold": 93.0,
+     "max_hours": 48.0
+    }
+   },
+   "temperature": {
+    "mean_6d": {
+     "kind": "light_mean",
+     "base": 17.5,
+     "per_1000_j_cm2": 1.5,
+     "band": 4.0,
+     "window_days": 6
+    },
+    "mean_24h": {
+     "kind": "rolling_mean",
+     "window_h": 24,
+     "high": 26.0
+    },
+    "dose": {
+     "kind": "dose",
+     "onset_low": 14.0,
+     "limit_low": 10.0,
+     "onset_high": 30.0,
+     "limit_high": 34.0,
+     "full_dose_min": 30.0,
+     "window_h": 24,
+     "heat_exponent": 160.0,
+     "cold_exponent": 30.0
+    },
+    "peak": {
+     "kind": "peak",
+     "low": 10.0,
+     "high": 34.0,
+     "min_minutes": 30.0
+    }
+   }
+  }
+ },
+ "arms": {
+  "incumbent": {
+   "n_seasons": 4,
+   "n_failed": 0,
+   "net_value_mean": -2.7416502769852698,
+   "net_value_std": 5.411037927595628,
+   "breakdown_mean": {
+    "revenue": 17.693944575645098,
+    "heating_cost": 8.455117692723707,
+    "co2_cost": 2.000427669278074,
+    "electricity_cost": 9.980049490628586,
+    "fruit_growth_kg_fw": 11.058715359778185
+   },
+   "online_cost_seconds": 0.0001667722774839837,
+   "solve_success": null,
+   "verdict": {
+    "seasons": "all",
+    "n_seasons": 4,
+    "net_value_mean": -2.7416502769852698,
+    "net_value_std": 5.411037927595628,
+    "gate": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop_counts": {
+     "humidity": {
+      "failing": 0,
+      "seasons": 4,
+      "upper_bound": 0.527129195498412
+     },
+     "temperature": {
+      "failing": 3,
+      "seasons": 4,
+      "upper_bound": 0.9872585449014338
+     }
+    },
+    "gate_banded": {
+     "humidity": false,
+     "temperature": false
+    },
+    "underpowered": true
+   },
+   "by_mismatch": {
+    "0.000": {
+     "n_seasons": 4,
+     "net_value_mean": -2.7416502769852698,
+     "net_value_std": 5.411037927595628,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 4,
+       "upper_bound": 0.527129195498412
+      },
+      "temperature": {
+       "failing": 3,
+       "seasons": 4,
+       "upper_bound": 0.9872585449014338
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    }
+   },
+   "safety": {
+    "co2": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "humidity": {
+     "incidence": 1.0,
+     "mean_duration_h": 488.25,
+     "degree_hours": 852.1846676057502,
+     "worst_excursion": 10.891969029787106,
+     "season_violation_prob": 1.0
+    },
+    "lamp": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "temperature": {
+     "incidence": 1.0,
+     "mean_duration_h": 60.4375,
+     "degree_hours": 72.91794777676768,
+     "worst_excursion": 6.0194514780824,
+     "season_violation_prob": 1.0
+    }
+   }
+  },
+  "physics_mpc": {
+   "n_seasons": 104,
+   "n_failed": 0,
+   "net_value_mean": -4.73583828928547,
+   "net_value_std": 2.6477617803397306,
+   "breakdown_mean": {
+    "revenue": 7.914289941524225,
+    "heating_cost": 8.914642946665742,
+    "co2_cost": 1.345200706465253,
+    "electricity_cost": 2.3902845776787,
+    "fruit_growth_kg_fw": 4.94643121345264
+   },
+   "online_cost_seconds": 0.19340774245126682,
+   "solve_success": 0.9885386484718198,
+   "verdict": {
+    "seasons": "mismatch above 0, pooled",
+    "n_seasons": 100,
+    "net_value_mean": -4.802902240163983,
+    "net_value_std": 2.672447605975234,
+    "gate": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop_counts": {
+     "humidity": {
+      "failing": 2,
+      "seasons": 100,
+      "upper_bound": 0.06161920039604069
+     },
+     "temperature": {
+      "failing": 100,
+      "seasons": 100,
+      "upper_bound": 1.0
+     }
+    },
+    "gate_banded": {
+     "humidity": false,
+     "temperature": false
+    },
+    "underpowered": false
+   },
+   "by_mismatch": {
+    "0.000": {
+     "n_seasons": 4,
+     "net_value_mean": -3.0592395173226468,
+     "net_value_std": 0.8965911187499331,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 4,
+       "upper_bound": 0.527129195498412
+      },
+      "temperature": {
+       "failing": 4,
+       "seasons": 4,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.025": {
+     "n_seasons": 20,
+     "net_value_mean": -3.431230727894673,
+     "net_value_std": 1.3721495865871969,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 20,
+       "upper_bound": 0.13910834066826516
+      },
+      "temperature": {
+       "failing": 20,
+       "seasons": 20,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.050": {
+     "n_seasons": 20,
+     "net_value_mean": -3.436170119978383,
+     "net_value_std": 1.9124628161410075,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 20,
+       "upper_bound": 0.13910834066826516
+      },
+      "temperature": {
+       "failing": 20,
+       "seasons": 20,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.100": {
+     "n_seasons": 20,
+     "net_value_mean": -4.005436596015363,
+     "net_value_std": 2.460232531678645,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 20,
+       "upper_bound": 0.13910834066826516
+      },
+      "temperature": {
+       "failing": 20,
+       "seasons": 20,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.150": {
+     "n_seasons": 20,
+     "net_value_mean": -5.625394703061309,
+     "net_value_std": 1.9522346835371287,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 20,
+       "upper_bound": 0.13910834066826516
+      },
+      "temperature": {
+       "failing": 20,
+       "seasons": 20,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.200": {
+     "n_seasons": 20,
+     "net_value_mean": -7.516279053870186,
+     "net_value_std": 2.8073670384522655,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 2,
+       "seasons": 20,
+       "upper_bound": 0.28261852488586087
+      },
+      "temperature": {
+       "failing": 20,
+       "seasons": 20,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    }
+   },
+   "safety": {
+    "co2": {
+     "incidence": 0.038461538461538464,
+     "mean_duration_h": 0.02403846153846154,
+     "degree_hours": 0.9337451295442213,
+     "worst_excursion": 74.68592338277676,
+     "season_violation_prob": 0.038461538461538464
+    },
+    "humidity": {
+     "incidence": 1.0,
+     "mean_duration_h": 386.5745192307692,
+     "degree_hours": 899.562411201126,
+     "worst_excursion": 11.957138293770583,
+     "season_violation_prob": 1.0
+    },
+    "lamp": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "temperature": {
+     "incidence": 1.0,
+     "mean_duration_h": 447.52884615384613,
+     "degree_hours": 479.79978467108845,
+     "worst_excursion": 13.363832051213269,
+     "season_violation_prob": 1.0
+    }
+   }
+  }
+ },
+ "pareto": {
+  "primary_gate": "crop_rules",
+  "gate_passers": [],
+  "gated": {
+   "arms": [
+    "incumbent"
+   ],
+   "non_dominated": [
+    "incumbent"
+   ],
+   "hypervolume": 0.0,
+   "hypervolume_vs_incumbent": 0.0,
+   "reference": "anti_ideal"
+  },
+  "ungated": {
+   "arms": [
+    "incumbent",
+    "physics_mpc"
+   ],
+   "non_dominated": [
+    "incumbent"
+   ],
+   "hypervolume": 1.0,
+   "hypervolume_vs_incumbent": 0.0,
+   "reference": "anti_ideal"
+  }
+ },
+ "seasons": [
+  {
+   "arm": "incumbent",
+   "label": "2022/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": 2.044325875964997,
+   "revenue": 17.569696405050255,
+   "heating_cost": 8.172521516167489,
+   "co2_cost": 1.9240321933870768,
+   "electricity_cost": 5.428816819530694,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 10.981060253156409,
+   "online_cost_seconds": 0.00016327216227900518,
+   "solve_success": null,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.495352808809356,
+   "max_excursion": {
+    "temperature": 5.774614389225196,
+    "co2": 0.0,
+    "humidity": 10.31931219733039,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 63.59831961530939,
+    "co2": 0.0,
+    "humidity": 654.1325208616518,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "incumbent",
+   "label": "2023/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -9.444210990371449,
+   "revenue": 18.197572185038144,
+   "heating_cost": 9.257636914877674,
+   "co2_cost": 1.958643425800127,
+   "electricity_cost": 16.425502834731788,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 11.37348261564884,
+   "online_cost_seconds": 0.00016243492476498254,
+   "solve_success": null,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.3810140556302057,
+   "max_excursion": {
+    "temperature": 5.407740282193025,
+    "co2": 0.0,
+    "humidity": 10.891969029787106,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 99.78263611727918,
+    "co2": 0.0,
+    "humidity": 929.909845937457,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "incumbent",
+   "label": "2024/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -6.654230083654138,
+   "revenue": 17.321660611590787,
+   "heating_cost": 8.76724283903075,
+   "co2_cost": 2.0492219318439227,
+   "electricity_cost": 13.159425924370248,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 10.826037882244242,
+   "online_cost_seconds": 0.00018692032731682317,
+   "solve_success": null,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": []
+   },
+   "night_humidity_deficit_g_m3": 2.267633707303014,
+   "max_excursion": {
+    "temperature": 6.0194514780824,
+    "co2": 0.0,
+    "humidity": 10.30203593278901,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 76.58320014560715,
+    "co2": 0.0,
+    "humidity": 999.9917482607755,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "incumbent",
+   "label": "2025/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": 3.0875140901195106,
+   "revenue": 17.686849100901206,
+   "heating_cost": 7.623069500818913,
+   "co2_cost": 2.0698131260811703,
+   "electricity_cost": 4.906452383881613,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 11.054280688063253,
+   "online_cost_seconds": 0.00015446169557512378,
+   "solve_success": null,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.4271724003909054,
+   "max_excursion": {
+    "temperature": 5.691005216545598,
+    "co2": 0.0,
+    "humidity": 10.42472359549025,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 51.70763522887497,
+    "co2": 0.0,
+    "humidity": 824.7045553631165,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -3.0466534798921785,
+   "revenue": 9.892412978602252,
+   "heating_cost": 7.905293881102604,
+   "co2_cost": 1.523450347464832,
+   "electricity_cost": 3.5103222299269947,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.182758111626407,
+   "online_cost_seconds": 0.1464275250629926,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.875949486405413,
+   "max_excursion": {
+    "temperature": 7.813608729265884,
+    "co2": 0.0,
+    "humidity": 9.231042470531165,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 931.2542547124782,
+    "co2": 0.0,
+    "humidity": 888.5219743814582,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.03",
+   "seed": 0,
+   "mismatch": 0.025,
+   "net": -3.1845719996326753,
+   "revenue": 10.266495340568026,
+   "heating_cost": 8.612016967723353,
+   "co2_cost": 1.438663286219398,
+   "electricity_cost": 3.4003870862579517,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.416559587855016,
+   "online_cost_seconds": 0.1503549186842806,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9990999853982887,
+   "max_excursion": {
+    "temperature": 7.914717469688153,
+    "co2": 0.0,
+    "humidity": 11.629503893619244,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 664.9113798798355,
+    "co2": 0.0,
+    "humidity": 634.1757732233621,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.03",
+   "seed": 1,
+   "mismatch": 0.025,
+   "net": -2.3068914065805046,
+   "revenue": 10.769005400060923,
+   "heating_cost": 7.966903957642657,
+   "co2_cost": 1.457452287416495,
+   "electricity_cost": 3.6515405615822747,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.730628375038076,
+   "online_cost_seconds": 0.1465042131285074,
+   "solve_success": 0.997917028293699,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9267137625110133,
+   "max_excursion": {
+    "temperature": 7.437914433324,
+    "co2": 0.0,
+    "humidity": 11.225844522240209,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 673.6512538823004,
+    "co2": 0.0,
+    "humidity": 921.79732003916,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.03",
+   "seed": 2,
+   "mismatch": 0.025,
+   "net": -1.5239653554935533,
+   "revenue": 10.540325146593295,
+   "heating_cost": 7.49572379169816,
+   "co2_cost": 1.400580793463206,
+   "electricity_cost": 3.167985916925481,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.587703216620809,
+   "online_cost_seconds": 0.15005816597732133,
+   "solve_success": 0.9980906092692241,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8713656653363218,
+   "max_excursion": {
+    "temperature": 6.7440786461846844,
+    "co2": 0.0,
+    "humidity": 11.550113998215465,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 682.95808349403,
+    "co2": 0.0,
+    "humidity": 1105.2698407718826,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.03",
+   "seed": 3,
+   "mismatch": 0.025,
+   "net": -3.4830289015182245,
+   "revenue": 9.229433408414803,
+   "heating_cost": 8.45158817606906,
+   "co2_cost": 1.4238760934475816,
+   "electricity_cost": 2.8369980404163844,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.768395880259251,
+   "online_cost_seconds": 0.14376876487655738,
+   "solve_success": 0.9993056760978997,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.055070555254275,
+   "max_excursion": {
+    "temperature": 8.182920719891332,
+    "co2": 0.0,
+    "humidity": 11.235668550490857,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 854.8286022910465,
+    "co2": 0.0,
+    "humidity": 653.7828977391416,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.03",
+   "seed": 4,
+   "mismatch": 0.025,
+   "net": -2.157985186818788,
+   "revenue": 10.495824014193705,
+   "heating_cost": 8.42926444387425,
+   "co2_cost": 1.3645320005651642,
+   "electricity_cost": 2.860012756573079,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.559890008871065,
+   "online_cost_seconds": 0.15504492565765918,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.003269293451926,
+   "max_excursion": {
+    "temperature": 7.407773117383505,
+    "co2": 0.0,
+    "humidity": 11.481335918943657,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 777.6382862660671,
+    "co2": 0.0,
+    "humidity": 588.5043208620976,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.05",
+   "seed": 0,
+   "mismatch": 0.05,
+   "net": -3.551075085411709,
+   "revenue": 10.495462271861063,
+   "heating_cost": 9.429079116856158,
+   "co2_cost": 1.4913004888674826,
+   "electricity_cost": 3.1261577515491323,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.559663919913164,
+   "online_cost_seconds": 0.15075380327002505,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.1795925494810326,
+   "max_excursion": {
+    "temperature": 7.1552350186614335,
+    "co2": 0.0,
+    "humidity": 10.986561339737122,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 444.58663271760264,
+    "co2": 0.0,
+    "humidity": 428.50170523820407,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.05",
+   "seed": 1,
+   "mismatch": 0.05,
+   "net": -2.6177081161748745,
+   "revenue": 10.627698216692728,
+   "heating_cost": 7.942286878601692,
+   "co2_cost": 1.4333966973234726,
+   "electricity_cost": 3.8697227569424375,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.642311385432955,
+   "online_cost_seconds": 0.1489130204743303,
+   "solve_success": 0.9970491234160735,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9411530873038583,
+   "max_excursion": {
+    "temperature": 6.714750637746112,
+    "co2": 0.0,
+    "humidity": 11.119936628662984,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 628.3878570992792,
+    "co2": 0.0,
+    "humidity": 967.5273236564055,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.05",
+   "seed": 2,
+   "mismatch": 0.05,
+   "net": -0.017088081458949134,
+   "revenue": 9.776735710455426,
+   "heating_cost": 7.085049868170166,
+   "co2_cost": 1.0888671146582192,
+   "electricity_cost": 1.6199068090859903,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.1104598190346415,
+   "online_cost_seconds": 0.17503090337644844,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0482315775177935,
+   "max_excursion": {
+    "temperature": 7.258937244039377,
+    "co2": 0.0,
+    "humidity": 9.326295835476088,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 334.8859830356588,
+    "co2": 0.0,
+    "humidity": 807.7606720975557,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.05",
+   "seed": 3,
+   "mismatch": 0.05,
+   "net": -4.513181680052572,
+   "revenue": 8.455224604637927,
+   "heating_cost": 9.155465541557199,
+   "co2_cost": 1.5133866909579439,
+   "electricity_cost": 2.2995540521753552,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.284515377898704,
+   "online_cost_seconds": 0.14105003770278896,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.2766538614007596,
+   "max_excursion": {
+    "temperature": 8.348615885487412,
+    "co2": 0.0,
+    "humidity": 9.919910925404139,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 669.4184219934932,
+    "co2": 0.0,
+    "humidity": 430.27939381151907,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.05",
+   "seed": 4,
+   "mismatch": 0.05,
+   "net": -2.474379433951052,
+   "revenue": 9.810036899336147,
+   "heating_cost": 8.931501148533705,
+   "co2_cost": 1.3608286120288868,
+   "electricity_cost": 1.992086572724607,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.131273062085092,
+   "online_cost_seconds": 0.15094775042984007,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.106684641954217,
+   "max_excursion": {
+    "temperature": 8.058329360287491,
+    "co2": 0.0,
+    "humidity": 9.664219268807557,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 620.9962930847803,
+    "co2": 0.0,
+    "humidity": 456.08137246458216,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -4.338291942843465,
+   "revenue": 9.486449939539327,
+   "heating_cost": 10.274836464193696,
+   "co2_cost": 1.3525443001878232,
+   "electricity_cost": 2.197361118001272,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.929031212212079,
+   "online_cost_seconds": 0.15919581292176355,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.5834702703624384,
+   "max_excursion": {
+    "temperature": 7.066418790520987,
+    "co2": 0.0,
+    "humidity": 11.31162484295777,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 262.77656823884956,
+    "co2": 0.0,
+    "humidity": 239.9584994273279,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.10",
+   "seed": 1,
+   "mismatch": 0.1,
+   "net": -2.6516930574962547,
+   "revenue": 10.504973382471087,
+   "heating_cost": 7.743896356134472,
+   "co2_cost": 1.4322522608995083,
+   "electricity_cost": 3.9805178229333618,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.565608364044429,
+   "online_cost_seconds": 0.15244234832833595,
+   "solve_success": 0.993577503905572,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9321221839268878,
+   "max_excursion": {
+    "temperature": 7.997825635679297,
+    "co2": 0.0,
+    "humidity": 11.629069770363458,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 437.7127178935549,
+    "co2": 0.0,
+    "humidity": 1271.5891062790104,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.10",
+   "seed": 2,
+   "mismatch": 0.1,
+   "net": 0.7787068121766518,
+   "revenue": 8.406580078158237,
+   "heating_cost": 6.170925464893017,
+   "co2_cost": 0.7363356369844835,
+   "electricity_cost": 0.7206121641040839,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.254112548848898,
+   "online_cost_seconds": 0.25682582140558,
+   "solve_success": 0.9967019614650234,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.99285866696699,
+   "max_excursion": {
+    "temperature": 6.2756357575618065,
+    "co2": 0.0,
+    "humidity": 9.600530469992407,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 355.0033311239592,
+    "co2": 0.0,
+    "humidity": 1259.7168052698662,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.10",
+   "seed": 3,
+   "mismatch": 0.1,
+   "net": -4.948504863218572,
+   "revenue": 8.407875913079707,
+   "heating_cost": 10.207129644935474,
+   "co2_cost": 1.3378002686508137,
+   "electricity_cost": 1.8114508627119912,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.254922445674817,
+   "online_cost_seconds": 0.14336869066862096,
+   "solve_success": 0.9986113521957993,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.721680789437121,
+   "max_excursion": {
+    "temperature": 8.069862663692003,
+    "co2": 0.0,
+    "humidity": 9.169305774511358,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 545.0958897953453,
+    "co2": 0.0,
+    "humidity": 201.37944356694385,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.10",
+   "seed": 4,
+   "mismatch": 0.1,
+   "net": -2.938289130280742,
+   "revenue": 9.563915165044538,
+   "heating_cost": 9.772956526361542,
+   "co2_cost": 1.317821689959793,
+   "electricity_cost": 1.4114260790039441,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.977446978152836,
+   "online_cost_seconds": 0.1517199244887421,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.3902439307112706,
+   "max_excursion": {
+    "temperature": 6.176638656461343,
+    "co2": 0.0,
+    "humidity": 9.80053245569124,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 309.7559989860726,
+    "co2": 0.0,
+    "humidity": 277.95009157250365,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.15",
+   "seed": 0,
+   "mismatch": 0.15,
+   "net": -6.894857106979762,
+   "revenue": 7.16514460379698,
+   "heating_cost": 11.26064166130999,
+   "co2_cost": 1.3435258255918394,
+   "electricity_cost": 1.455834223874915,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.478215377373112,
+   "online_cost_seconds": 0.1591959226717323,
+   "solve_success": 0.9925360180524214,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.2102644349771325,
+   "max_excursion": {
+    "temperature": 6.681701434640528,
+    "co2": 0.0,
+    "humidity": 11.43420991529942,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 114.67979285933544,
+    "co2": 0.0,
+    "humidity": 103.46255833310889,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.15",
+   "seed": 1,
+   "mismatch": 0.15,
+   "net": -2.916713370210841,
+   "revenue": 9.967124952785023,
+   "heating_cost": 7.520035029571974,
+   "co2_cost": 1.354698699286248,
+   "electricity_cost": 4.009104594137642,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.229453095490639,
+   "online_cost_seconds": 0.15166440842605447,
+   "solve_success": 0.9861135219579934,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9809526100592263,
+   "max_excursion": {
+    "temperature": 7.052380871046526,
+    "co2": 0.0,
+    "humidity": 11.33420113678136,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 362.7708318354971,
+    "co2": 0.0,
+    "humidity": 1525.204968523406,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.15",
+   "seed": 2,
+   "mismatch": 0.15,
+   "net": -4.195946834587526,
+   "revenue": 4.267231561804629,
+   "heating_cost": 6.125170370665493,
+   "co2_cost": 1.091366288064466,
+   "electricity_cost": 1.246641737662196,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 2.667019726127893,
+   "online_cost_seconds": 0.2550882313694344,
+   "solve_success": 0.9798646068390905,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9609664096635557,
+   "max_excursion": {
+    "temperature": 6.976288343453401,
+    "co2": 0.0,
+    "humidity": 8.529851225949344,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 597.1184448376384,
+    "co2": 0.0,
+    "humidity": 1169.9297935313696,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.15",
+   "seed": 3,
+   "mismatch": 0.15,
+   "net": -4.885819567047191,
+   "revenue": 7.477801905367608,
+   "heating_cost": 10.065510809844652,
+   "co2_cost": 1.0531313956594648,
+   "electricity_cost": 1.2449792669106832,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.673626190854755,
+   "online_cost_seconds": 0.14339688223095415,
+   "solve_success": 0.9944454087831973,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.052231651171703,
+   "max_excursion": {
+    "temperature": 7.156520939094151,
+    "co2": 0.0,
+    "humidity": 11.452071573065808,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 487.9278975734331,
+    "co2": 0.0,
+    "humidity": 270.02233887098714,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.15",
+   "seed": 4,
+   "mismatch": 0.15,
+   "net": -4.184915143797406,
+   "revenue": 8.626814591865585,
+   "heating_cost": 10.64421831523362,
+   "co2_cost": 1.0809178085779552,
+   "electricity_cost": 1.0865936118514175,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.39175911991599,
+   "online_cost_seconds": 0.12234454930787468,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.8116780445414644,
+   "max_excursion": {
+    "temperature": 6.968074340110194,
+    "co2": 0.0,
+    "humidity": 9.720173931363988,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 188.15258303100217,
+    "co2": 0.0,
+    "humidity": 134.83227646670275,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.20",
+   "seed": 0,
+   "mismatch": 0.2,
+   "net": -8.249411791714866,
+   "revenue": 6.131145288449493,
+   "heating_cost": 11.889221889653971,
+   "co2_cost": 1.291272241211146,
+   "electricity_cost": 1.2000629492992425,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.831965805280933,
+   "online_cost_seconds": 0.1267889908493012,
+   "solve_success": 0.9845512931782676,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.8750218554168447,
+   "max_excursion": {
+    "temperature": 6.206467363118531,
+    "co2": 0.0,
+    "humidity": 11.278059734266364,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 63.70733463924325,
+    "co2": 0.0,
+    "humidity": 33.30090174759379,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.20",
+   "seed": 1,
+   "mismatch": 0.2,
+   "net": -4.411355802658605,
+   "revenue": 9.079504220711494,
+   "heating_cost": 7.27659237455085,
+   "co2_cost": 1.4673484520248996,
+   "electricity_cost": 4.74691919679435,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.674690137944683,
+   "online_cost_seconds": 0.12927784149778926,
+   "solve_success": 0.9822947404964416,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9615892019111911,
+   "max_excursion": {
+    "temperature": 8.066717869009938,
+    "co2": 0.0,
+    "humidity": 11.400279960106772,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 447.18213433095866,
+    "co2": 0.0,
+    "humidity": 1753.383908762573,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.20",
+   "seed": 2,
+   "mismatch": 0.2,
+   "net": -11.316085717079675,
+   "revenue": 8.45585998581337,
+   "heating_cost": 6.421218765310299,
+   "co2_cost": 2.5380347994890595,
+   "electricity_cost": 10.812692138093688,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.2849124911333565,
+   "online_cost_seconds": 0.5132793012973793,
+   "solve_success": 0.7559451484117341,
+   "violated": {
+    "temperature": true,
+    "co2": true,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.4201103958497912,
+   "max_excursion": {
+    "temperature": 13.363832051213269,
+    "co2": 66.45186983269355,
+    "humidity": 9.799181803159186,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 3198.271858912998,
+    "co2": 24.341263208253395,
+    "humidity": 2567.340705960678,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.20",
+   "seed": 3,
+   "mismatch": 0.2,
+   "net": -4.659476618655007,
+   "revenue": 6.4991644008560625,
+   "heating_cost": 9.042122035216455,
+   "co2_cost": 1.036648878274516,
+   "electricity_cost": 1.0798701060200986,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.061977750535039,
+   "online_cost_seconds": 0.16738160502665814,
+   "solve_success": 0.9925360180524214,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.7078595046571627,
+   "max_excursion": {
+    "temperature": 5.853755591665273,
+    "co2": 0.0,
+    "humidity": 11.4053899579892,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 527.4706934013955,
+    "co2": 0.0,
+    "humidity": 455.5811877649985,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2022/m0.20",
+   "seed": 4,
+   "mismatch": 0.2,
+   "net": -5.223675734666333,
+   "revenue": 8.02652006000394,
+   "heating_cost": 11.290125225565172,
+   "co2_cost": 1.0589252728353409,
+   "electricity_cost": 0.9011452962697583,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.016575037502462,
+   "online_cost_seconds": 0.13282225700662115,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.2263843645560955,
+   "max_excursion": {
+    "temperature": 6.99607627149175,
+    "co2": 0.0,
+    "humidity": 10.222695430473266,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 156.12352362925765,
+    "co2": 0.0,
+    "humidity": 130.31353297462084,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -3.925836157977221,
+   "revenue": 8.39906529703162,
+   "heating_cost": 8.966748469753611,
+   "co2_cost": 1.2508748792996658,
+   "electricity_cost": 2.107278105955568,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.249415810644763,
+   "online_cost_seconds": 0.12001898789950641,
+   "solve_success": 0.9963547995139733,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0485057478903186,
+   "max_excursion": {
+    "temperature": 8.94053484993272,
+    "co2": 0.0,
+    "humidity": 9.552574724531297,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 507.5822092665785,
+    "co2": 0.0,
+    "humidity": 806.5921083092616,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.03",
+   "seed": 0,
+   "mismatch": 0.025,
+   "net": -5.128575885944413,
+   "revenue": 8.10644813723283,
+   "heating_cost": 9.730232407159324,
+   "co2_cost": 1.2881852721747225,
+   "electricity_cost": 2.216606343843196,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.066530085770518,
+   "online_cost_seconds": 0.12053239200362788,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.1590654587049465,
+   "max_excursion": {
+    "temperature": 8.980477515102484,
+    "co2": 0.0,
+    "humidity": 9.379517662658529,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 393.8626754494424,
+    "co2": 0.0,
+    "humidity": 605.9052388019246,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.03",
+   "seed": 1,
+   "mismatch": 0.025,
+   "net": -4.482406246525139,
+   "revenue": 8.308681958565531,
+   "heating_cost": 8.988720540632837,
+   "co2_cost": 1.4035871199914491,
+   "electricity_cost": 2.3987805444663826,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.192926224103457,
+   "online_cost_seconds": 0.12183290948956471,
+   "solve_success": 0.9960076375629231,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0218275095182845,
+   "max_excursion": {
+    "temperature": 9.845530697931176,
+    "co2": 0.0,
+    "humidity": 11.132074490550721,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 491.53660154851406,
+    "co2": 0.0,
+    "humidity": 975.7457115148447,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.03",
+   "seed": 2,
+   "mismatch": 0.025,
+   "net": -4.4862402639478205,
+   "revenue": 8.211990622398773,
+   "heating_cost": 8.707109655947237,
+   "co2_cost": 1.4057268327164896,
+   "electricity_cost": 2.585394397682866,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.132494138999233,
+   "online_cost_seconds": 0.1208350570891815,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9333282643022955,
+   "max_excursion": {
+    "temperature": 8.322926899179581,
+    "co2": 0.0,
+    "humidity": 11.369182587978543,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 544.8858648100083,
+    "co2": 0.0,
+    "humidity": 1093.5663212546965,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.03",
+   "seed": 3,
+   "mismatch": 0.025,
+   "net": -5.79185600354493,
+   "revenue": 7.65874149677571,
+   "heating_cost": 9.727323152777105,
+   "co2_cost": 1.4157575835264147,
+   "electricity_cost": 2.3075167640171212,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.786713435484819,
+   "online_cost_seconds": 0.10798606476281829,
+   "solve_success": 0.9972227043915987,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.2223726739599563,
+   "max_excursion": {
+    "temperature": 9.37563337776741,
+    "co2": 0.0,
+    "humidity": 11.286604882814686,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 634.5053201723476,
+    "co2": 0.0,
+    "humidity": 616.1866150508156,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.03",
+   "seed": 4,
+   "mismatch": 0.025,
+   "net": -4.996056475231061,
+   "revenue": 8.135973321948057,
+   "heating_cost": 9.574262730892013,
+   "co2_cost": 1.2900636466504296,
+   "electricity_cost": 2.2677034196366757,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.084983326217536,
+   "online_cost_seconds": 0.12334970921264098,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.097531508280596,
+   "max_excursion": {
+    "temperature": 10.1830439085868,
+    "co2": 0.0,
+    "humidity": 11.536827666291288,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 579.526802640319,
+    "co2": 0.0,
+    "humidity": 625.1641115995811,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.05",
+   "seed": 0,
+   "mismatch": 0.05,
+   "net": -5.865674855122187,
+   "revenue": 8.475090271762852,
+   "heating_cost": 10.532928687551106,
+   "co2_cost": 1.3743291209095057,
+   "electricity_cost": 2.4335073184244287,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.2969314198517825,
+   "online_cost_seconds": 0.12677046945749404,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.2975730521226136,
+   "max_excursion": {
+    "temperature": 9.386458739532,
+    "co2": 0.0,
+    "humidity": 11.451890974041817,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 313.39899189390997,
+    "co2": 0.0,
+    "humidity": 444.83534230846345,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.05",
+   "seed": 1,
+   "mismatch": 0.05,
+   "net": -4.8247205610219766,
+   "revenue": 8.510670595034384,
+   "heating_cost": 9.05147415344376,
+   "co2_cost": 1.4888167806139054,
+   "electricity_cost": 2.795100221998694,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.31916912189649,
+   "online_cost_seconds": 0.12375428883493397,
+   "solve_success": 0.9951397326852977,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0350724080378746,
+   "max_excursion": {
+    "temperature": 9.452979129541877,
+    "co2": 0.0,
+    "humidity": 9.552574724531297,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 467.9327168533523,
+    "co2": 0.0,
+    "humidity": 989.0844485502643,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.05",
+   "seed": 2,
+   "mismatch": 0.05,
+   "net": -2.463637761903591,
+   "revenue": 8.313114262892949,
+   "heating_cost": 8.150918236779797,
+   "co2_cost": 1.067985922003894,
+   "electricity_cost": 1.5578478660128479,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.195696414308093,
+   "online_cost_seconds": 0.15530943424454602,
+   "solve_success": 0.9972227043915987,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.017000198274397,
+   "max_excursion": {
+    "temperature": 10.229018493757192,
+    "co2": 0.0,
+    "humidity": 10.725318800198323,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 377.88829415796,
+    "co2": 0.0,
+    "humidity": 957.6837950409727,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.05",
+   "seed": 3,
+   "mismatch": 0.05,
+   "net": -6.580642235344323,
+   "revenue": 7.443935466865383,
+   "heating_cost": 10.488490869456392,
+   "co2_cost": 1.486105853378516,
+   "electricity_cost": 2.0499809793747983,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.652459666790865,
+   "online_cost_seconds": 0.1321088907278636,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.460505775176197,
+   "max_excursion": {
+    "temperature": 9.253109128554357,
+    "co2": 0.0,
+    "humidity": 11.14986927980408,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 532.8611723995891,
+    "co2": 0.0,
+    "humidity": 506.7041151574232,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.05",
+   "seed": 4,
+   "mismatch": 0.05,
+   "net": -5.300337520508526,
+   "revenue": 8.021655791996057,
+   "heating_cost": 10.221971073730385,
+   "co2_cost": 1.2802246225584413,
+   "electricity_cost": 1.8197976162157552,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.013534869997535,
+   "online_cost_seconds": 0.15340764070849724,
+   "solve_success": 0.9993056760978997,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.191553720911278,
+   "max_excursion": {
+    "temperature": 9.467602569334723,
+    "co2": 0.0,
+    "humidity": 9.027830942786238,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 464.7422148771714,
+    "co2": 0.0,
+    "humidity": 474.67642928549037,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -7.485592710758188,
+   "revenue": 7.514412026239351,
+   "heating_cost": 11.661782504376417,
+   "co2_cost": 1.34591697939994,
+   "electricity_cost": 1.9923052532211811,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.696507516399595,
+   "online_cost_seconds": 0.17208670467956028,
+   "solve_success": 0.9980906092692241,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.7489707321192185,
+   "max_excursion": {
+    "temperature": 8.587224661150117,
+    "co2": 0.0,
+    "humidity": 10.390767127308834,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 192.60528626598642,
+    "co2": 0.0,
+    "humidity": 308.9173702348592,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.10",
+   "seed": 1,
+   "mismatch": 0.1,
+   "net": -4.969383629170137,
+   "revenue": 8.046575401062809,
+   "heating_cost": 8.788080773899578,
+   "co2_cost": 1.4700796326457313,
+   "electricity_cost": 2.757798623687637,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.029109625664255,
+   "online_cost_seconds": 0.1621130481199521,
+   "solve_success": 0.9923624370768964,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.021887852764785,
+   "max_excursion": {
+    "temperature": 10.437718453842184,
+    "co2": 0.0,
+    "humidity": 11.334830241412561,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 382.7025580792154,
+    "co2": 0.0,
+    "humidity": 1352.9613307970449,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.10",
+   "seed": 2,
+   "mismatch": 0.1,
+   "net": -1.134637736628231,
+   "revenue": 7.525621022869957,
+   "heating_cost": 7.078377866210231,
+   "co2_cost": 0.7945413430331996,
+   "electricity_cost": 0.7873395502547568,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.703513139293722,
+   "online_cost_seconds": 0.2984202685543438,
+   "solve_success": 0.9980906092692241,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.970789666262338,
+   "max_excursion": {
+    "temperature": 8.109991371231475,
+    "co2": 0.0,
+    "humidity": 9.394937572611624,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 378.96387524917964,
+    "co2": 0.0,
+    "humidity": 1682.872516516375,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.10",
+   "seed": 3,
+   "mismatch": 0.1,
+   "net": -7.433381792063331,
+   "revenue": 6.59666452028789,
+   "heating_cost": 11.111030648839494,
+   "co2_cost": 1.3866025376830706,
+   "electricity_cost": 1.5324131258286584,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.122915325179931,
+   "online_cost_seconds": 0.14694164912050564,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.8908704555546567,
+   "max_excursion": {
+    "temperature": 10.585473753172732,
+    "co2": 0.0,
+    "humidity": 11.216472409960389,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 447.20632801732,
+    "co2": 0.0,
+    "humidity": 345.1383708363682,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.10",
+   "seed": 4,
+   "mismatch": 0.1,
+   "net": -6.671703888672228,
+   "revenue": 7.385981734656772,
+   "heating_cost": 11.23308721746688,
+   "co2_cost": 1.3562693212547532,
+   "electricity_cost": 1.4683290846073676,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.616238584160482,
+   "online_cost_seconds": 0.16943938323266639,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.3984370292907475,
+   "max_excursion": {
+    "temperature": 8.29006872967883,
+    "co2": 0.0,
+    "humidity": 11.02794354406231,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 373.2798451132264,
+    "co2": 0.0,
+    "humidity": 246.63671522214514,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.15",
+   "seed": 0,
+   "mismatch": 0.15,
+   "net": -9.598588182024839,
+   "revenue": 5.276701650621719,
+   "heating_cost": 12.24696780382531,
+   "co2_cost": 1.341599991186369,
+   "electricity_cost": 1.2867220376348776,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.2979385316385743,
+   "online_cost_seconds": 0.1868642924348004,
+   "solve_success": 0.9928831800034716,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.30778240931403,
+   "max_excursion": {
+    "temperature": 8.367757672154596,
+    "co2": 0.0,
+    "humidity": 11.245515839622314,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 82.09400388879823,
+    "co2": 0.0,
+    "humidity": 124.86699497206084,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.15",
+   "seed": 1,
+   "mismatch": 0.15,
+   "net": -6.259699700480723,
+   "revenue": 7.049868131999877,
+   "heating_cost": 8.402860459371073,
+   "co2_cost": 1.5559580778584174,
+   "electricity_cost": 3.3507492952511084,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.406167582499923,
+   "online_cost_seconds": 0.1589857342974043,
+   "solve_success": 0.9868078458600937,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9795604014247983,
+   "max_excursion": {
+    "temperature": 11.069206093425755,
+    "co2": 0.0,
+    "humidity": 11.227022253998427,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 363.9068261135139,
+    "co2": 0.0,
+    "humidity": 1842.5380266401378,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.15",
+   "seed": 2,
+   "mismatch": 0.15,
+   "net": -6.585003884484637,
+   "revenue": 2.4405872077839033,
+   "heating_cost": 6.717704373548837,
+   "co2_cost": 1.1866974236201304,
+   "electricity_cost": 1.1211892950995725,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 1.5253670048649395,
+   "online_cost_seconds": 0.2565128632854465,
+   "solve_success": 0.9869814268356188,
+   "violated": {
+    "temperature": true,
+    "co2": true,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9662098728785298,
+   "max_excursion": {
+    "temperature": 9.060068425399761,
+    "co2": 43.04755049178834,
+    "humidity": 11.11201949350847,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 612.867921352684,
+    "co2": 24.50496244896391,
+    "humidity": 1543.5471102460947,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.15",
+   "seed": 3,
+   "mismatch": 0.15,
+   "net": -8.343786902116065,
+   "revenue": 5.175013300819738,
+   "heating_cost": 10.978802919355685,
+   "co2_cost": 1.305351490238504,
+   "electricity_cost": 1.2346457933416155,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.234383313012336,
+   "online_cost_seconds": 0.1730412754035482,
+   "solve_success": 0.993751084881097,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.1194752566553974,
+   "max_excursion": {
+    "temperature": 9.158136851001725,
+    "co2": 0.0,
+    "humidity": 9.552574724531297,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 466.8022280663821,
+    "co2": 0.0,
+    "humidity": 359.53945338821757,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.15",
+   "seed": 4,
+   "mismatch": 0.15,
+   "net": -7.367199089248639,
+   "revenue": 6.340909106027497,
+   "heating_cost": 11.687694216932211,
+   "co2_cost": 1.0424354602503105,
+   "electricity_cost": 0.9779785180936122,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.9630681912671855,
+   "online_cost_seconds": 0.16227272682606575,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.7962859171095817,
+   "max_excursion": {
+    "temperature": 9.193082965973936,
+    "co2": 0.0,
+    "humidity": 9.552574724531297,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 206.951534480786,
+    "co2": 0.0,
+    "humidity": 128.37009504787727,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.20",
+   "seed": 0,
+   "mismatch": 0.2,
+   "net": -11.198529844306286,
+   "revenue": 4.338028777186922,
+   "heating_cost": 13.064801626405,
+   "co2_cost": 1.3445610936886427,
+   "electricity_cost": 1.1271959013995676,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 2.7112679857418263,
+   "online_cost_seconds": 0.18021970285117417,
+   "solve_success": 0.9817739975698664,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 4.061409341487136,
+   "max_excursion": {
+    "temperature": 8.122619644523176,
+    "co2": 0.0,
+    "humidity": 9.547486360981082,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 52.19006387135563,
+    "co2": 0.0,
+    "humidity": 25.576684683083403,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.20",
+   "seed": 1,
+   "mismatch": 0.2,
+   "net": -7.548880447793552,
+   "revenue": 6.876703246523041,
+   "heating_cost": 8.055021755384258,
+   "co2_cost": 1.6469513670516454,
+   "electricity_cost": 4.723610571880689,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.2979395290769,
+   "online_cost_seconds": 0.1712500478848959,
+   "solve_success": 0.9800381878146155,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9056396051325903,
+   "max_excursion": {
+    "temperature": 10.923326167712204,
+    "co2": 0.0,
+    "humidity": 10.280392430188812,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 457.26682631919425,
+    "co2": 0.0,
+    "humidity": 2355.4869884809086,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.20",
+   "seed": 2,
+   "mismatch": 0.2,
+   "net": -7.559259588468915,
+   "revenue": 2.8759210314108503,
+   "heating_cost": 6.403161495061486,
+   "co2_cost": 1.3687469312144942,
+   "electricity_cost": 2.663272193603785,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 1.7974506446317813,
+   "online_cost_seconds": 0.4018938064974465,
+   "solve_success": 0.9343863912515188,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.7212474134034865,
+   "max_excursion": {
+    "temperature": 13.086389634949628,
+    "co2": 0.0,
+    "humidity": 10.459085851661015,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 1685.239834578909,
+    "co2": 0.0,
+    "humidity": 2345.574350301352,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.20",
+   "seed": 3,
+   "mismatch": 0.2,
+   "net": -7.675457433595789,
+   "revenue": 4.342650049729333,
+   "heating_cost": 9.73944207226591,
+   "co2_cost": 1.1436770523844062,
+   "electricity_cost": 1.1349883586748055,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 2.7141562810808333,
+   "online_cost_seconds": 0.20174581979074777,
+   "solve_success": 0.9869814268356188,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.736559539190524,
+   "max_excursion": {
+    "temperature": 7.687923993346609,
+    "co2": 0.0,
+    "humidity": 11.203938666746296,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 552.1420067575195,
+    "co2": 0.0,
+    "humidity": 551.6466959802168,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2023/m0.20",
+   "seed": 4,
+   "mismatch": 0.2,
+   "net": -8.57674881628403,
+   "revenue": 5.644061426048155,
+   "heating_cost": 12.296492855995941,
+   "co2_cost": 1.0660039673505335,
+   "electricity_cost": 0.8583134189857085,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.5275383912800966,
+   "online_cost_seconds": 0.1872023810274137,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.242865134133915,
+   "max_excursion": {
+    "temperature": 8.819961332542537,
+    "co2": 0.0,
+    "humidity": 9.254740791771027,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 172.34980386418584,
+    "co2": 0.0,
+    "humidity": 71.8846531329392,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -3.6568530071992704,
+   "revenue": 7.5772392050960455,
+   "heating_cost": 8.050570968078967,
+   "co2_cost": 1.4089100823794538,
+   "electricity_cost": 1.7746111618368947,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.735774503185028,
+   "online_cost_seconds": 0.17127454543282325,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.014428212704418,
+   "max_excursion": {
+    "temperature": 5.452083197382736,
+    "co2": 0.0,
+    "humidity": 11.91864048225952,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 388.0925878219896,
+    "co2": 0.0,
+    "humidity": 975.4471842345679,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.03",
+   "seed": 0,
+   "mismatch": 0.025,
+   "net": -4.5605739814716175,
+   "revenue": 7.734365217838522,
+   "heating_cost": 8.970204791256268,
+   "co2_cost": 1.3665804614405528,
+   "electricity_cost": 1.9581539466133198,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.833978261149076,
+   "online_cost_seconds": 0.1695444674376889,
+   "solve_success": 0.9998264190244749,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.132803215048017,
+   "max_excursion": {
+    "temperature": 5.6852285948775165,
+    "co2": 0.0,
+    "humidity": 11.953736697465885,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 283.3908162543968,
+    "co2": 0.0,
+    "humidity": 641.1085196393706,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.03",
+   "seed": 1,
+   "mismatch": 0.025,
+   "net": -4.355774304941014,
+   "revenue": 7.331710838217346,
+   "heating_cost": 8.03117915033097,
+   "co2_cost": 1.4982877496420766,
+   "electricity_cost": 2.158018243185311,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.582319273885841,
+   "online_cost_seconds": 0.16615745067692259,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.007645628062641,
+   "max_excursion": {
+    "temperature": 5.322168158437023,
+    "co2": 0.0,
+    "humidity": 8.079209402649582,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 363.7043193978951,
+    "co2": 0.0,
+    "humidity": 1088.440633824407,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.03",
+   "seed": 2,
+   "mismatch": 0.025,
+   "net": -3.9840322260516983,
+   "revenue": 7.7172699384395615,
+   "heating_cost": 7.753993709536148,
+   "co2_cost": 1.5287690287636486,
+   "electricity_cost": 2.4185394261914626,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.823293711524726,
+   "online_cost_seconds": 0.1965958755331811,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.896771503060809,
+   "max_excursion": {
+    "temperature": 5.34814139857091,
+    "co2": 0.0,
+    "humidity": 10.387902312390096,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 423.5733969264477,
+    "co2": 0.0,
+    "humidity": 1293.1311934635055,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.03",
+   "seed": 3,
+   "mismatch": 0.025,
+   "net": -4.789652102532795,
+   "revenue": 7.276102398853624,
+   "heating_cost": 8.851191450343252,
+   "co2_cost": 1.3829910478343161,
+   "electricity_cost": 1.8315720032088494,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.547563999283515,
+   "online_cost_seconds": 0.1587077951348834,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.262507896629633,
+   "max_excursion": {
+    "temperature": 5.91567729993365,
+    "co2": 0.0,
+    "humidity": 6.641454080537983,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 371.93883591663314,
+    "co2": 0.0,
+    "humidity": 686.3214734859831,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.03",
+   "seed": 4,
+   "mismatch": 0.025,
+   "net": -3.9584926708179937,
+   "revenue": 7.8863241864124545,
+   "heating_cost": 8.64199028694649,
+   "co2_cost": 1.2977327129683875,
+   "electricity_cost": 1.9050938573155731,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.928952616507784,
+   "online_cost_seconds": 0.20443040727386994,
+   "solve_success": 0.9998264190244749,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0453216887086882,
+   "max_excursion": {
+    "temperature": 5.176741135535204,
+    "co2": 0.0,
+    "humidity": 10.323586867212754,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 421.5639408754827,
+    "co2": 0.0,
+    "humidity": 790.82178213214,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.05",
+   "seed": 0,
+   "mismatch": 0.05,
+   "net": -5.548589499731664,
+   "revenue": 7.873071473217793,
+   "heating_cost": 9.819745742694595,
+   "co2_cost": 1.4223842904329067,
+   "electricity_cost": 2.1795309398219564,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.920669670761121,
+   "online_cost_seconds": 0.20885566964716037,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.2623499808414125,
+   "max_excursion": {
+    "temperature": 5.437128359149552,
+    "co2": 0.0,
+    "humidity": 10.943061505713175,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 258.30500715935267,
+    "co2": 0.0,
+    "humidity": 474.91926603109744,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.05",
+   "seed": 1,
+   "mismatch": 0.05,
+   "net": -3.856303949925401,
+   "revenue": 7.802640147029798,
+   "heating_cost": 7.924146930655348,
+   "co2_cost": 1.5184201359779974,
+   "electricity_cost": 2.2163770303218557,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.876650091893624,
+   "online_cost_seconds": 0.20418965754635618,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9665116259765136,
+   "max_excursion": {
+    "temperature": 5.377827336465046,
+    "co2": 0.0,
+    "humidity": 9.505172010951853,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 389.54467474976417,
+    "co2": 0.0,
+    "humidity": 1293.7820638334156,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.05",
+   "seed": 2,
+   "mismatch": 0.05,
+   "net": -1.9783113020148608,
+   "revenue": 7.671929048230547,
+   "heating_cost": 7.224664044816514,
+   "co2_cost": 1.101411904754755,
+   "electricity_cost": 1.3241644006741404,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.794955655144092,
+   "online_cost_seconds": 0.21084247543136128,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9494726860868548,
+   "max_excursion": {
+    "temperature": 5.171700859267057,
+    "co2": 0.0,
+    "humidity": 8.508059339918802,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 300.77932435275636,
+    "co2": 0.0,
+    "humidity": 1286.1605536656919,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.05",
+   "seed": 3,
+   "mismatch": 0.05,
+   "net": -5.71191464495644,
+   "revenue": 7.144607085047284,
+   "heating_cost": 9.643000965438336,
+   "co2_cost": 1.499391677427646,
+   "electricity_cost": 1.714129087137744,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.465379428154552,
+   "online_cost_seconds": 0.1552960814485073,
+   "solve_success": 0.9998264190244749,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.486562591016724,
+   "max_excursion": {
+    "temperature": 7.0007181485821315,
+    "co2": 0.0,
+    "humidity": 11.492482606273455,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 347.0631342913432,
+    "co2": 0.0,
+    "humidity": 531.6384374121038,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.05",
+   "seed": 4,
+   "mismatch": 0.05,
+   "net": -4.3279005695012005,
+   "revenue": 7.863331484104871,
+   "heating_cost": 9.309690007559528,
+   "co2_cost": 1.2874250289655926,
+   "electricity_cost": 1.5941170170809493,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.914582177565545,
+   "online_cost_seconds": 0.19902071334709834,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.17610221898708,
+   "max_excursion": {
+    "temperature": 4.9727616569198965,
+    "co2": 0.0,
+    "humidity": 11.046010805817886,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 276.82884982688665,
+    "co2": 0.0,
+    "humidity": 536.058974802454,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -6.52412609982057,
+   "revenue": 7.401354295023587,
+   "heating_cost": 10.984281344146327,
+   "co2_cost": 1.329875954507007,
+   "electricity_cost": 1.6113230961908245,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.625846434389742,
+   "online_cost_seconds": 0.21909477554098084,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.7875318011102745,
+   "max_excursion": {
+    "temperature": 4.936663385161976,
+    "co2": 0.0,
+    "humidity": 11.393171298011907,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 122.20940450497723,
+    "co2": 0.0,
+    "humidity": 309.99782686125724,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 1,
+   "mismatch": 0.1,
+   "net": -5.1139764025895795,
+   "revenue": 7.2965577934387715,
+   "heating_cost": 7.686760504089849,
+   "co2_cost": 1.6174558879043028,
+   "electricity_cost": 3.106317804034201,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.560348620899232,
+   "online_cost_seconds": 0.19391891294883393,
+   "solve_success": 0.9980906092692241,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8959090602539006,
+   "max_excursion": {
+    "temperature": 6.468570695692552,
+    "co2": 0.0,
+    "humidity": 11.899474600673727,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 405.9167316307589,
+    "co2": 0.0,
+    "humidity": 1764.30288511769,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 2,
+   "mismatch": 0.1,
+   "net": -1.4738863924109262,
+   "revenue": 6.872516158139772,
+   "heating_cost": 6.4624448548201805,
+   "co2_cost": 0.9389339156590022,
+   "electricity_cost": 0.9450237800715154,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.295322598837357,
+   "online_cost_seconds": 0.335127349872939,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8436109282177644,
+   "max_excursion": {
+    "temperature": 4.669780665314864,
+    "co2": 0.0,
+    "humidity": 10.20533931550871,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 392.7109602166811,
+    "co2": 0.0,
+    "humidity": 1645.5191311381925,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 3,
+   "mismatch": 0.1,
+   "net": -7.515329728839031,
+   "revenue": 6.102419698410873,
+   "heating_cost": 10.746070798660096,
+   "co2_cost": 1.440519976804129,
+   "electricity_cost": 1.431158651785681,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.814012311506796,
+   "online_cost_seconds": 0.2144189958649751,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.7754237214660615,
+   "max_excursion": {
+    "temperature": 5.9816320576245054,
+    "co2": 0.0,
+    "humidity": 9.244993549194788,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 348.864955385042,
+    "co2": 0.0,
+    "humidity": 287.25007245317704,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 4,
+   "mismatch": 0.1,
+   "net": -5.660981406118212,
+   "revenue": 7.5116043343155265,
+   "heating_cost": 10.51195862877088,
+   "co2_cost": 1.3277091922381956,
+   "electricity_cost": 1.3329179194246608,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.694752708947203,
+   "online_cost_seconds": 0.2250948166392102,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.410296327709129,
+   "max_excursion": {
+    "temperature": 5.049137472229377,
+    "co2": 0.0,
+    "humidity": 8.933801335584292,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 147.79582114236592,
+    "co2": 0.0,
+    "humidity": 315.01747476759994,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.15",
+   "seed": 0,
+   "mismatch": 0.15,
+   "net": -8.791691443670654,
+   "revenue": 5.030384743192951,
+   "heating_cost": 11.412316048985163,
+   "co2_cost": 1.3076372824795157,
+   "electricity_cost": 1.102122855398926,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.1439904644955945,
+   "online_cost_seconds": 0.23180315697529727,
+   "solve_success": 0.993577503905572,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.374644403777356,
+   "max_excursion": {
+    "temperature": 4.170872591115668,
+    "co2": 0.0,
+    "humidity": 11.545346306316532,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 59.34481731547986,
+    "co2": 0.0,
+    "humidity": 156.62992423173569,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.15",
+   "seed": 1,
+   "mismatch": 0.15,
+   "net": -3.6560310634917137,
+   "revenue": 7.691571420791263,
+   "heating_cost": 7.329924601920723,
+   "co2_cost": 1.3953981402283133,
+   "electricity_cost": 2.62227974213394,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.807232137994539,
+   "online_cost_seconds": 0.21888569890505463,
+   "solve_success": 0.993577503905572,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9049098772433715,
+   "max_excursion": {
+    "temperature": 5.201304750101825,
+    "co2": 0.0,
+    "humidity": 11.957138293770583,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 213.8879613872729,
+    "co2": 0.0,
+    "humidity": 2285.278776531777,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.15",
+   "seed": 2,
+   "mismatch": 0.15,
+   "net": -5.46687058023952,
+   "revenue": 2.872572564011432,
+   "heating_cost": 5.9377743029796095,
+   "co2_cost": 1.254332175993076,
+   "electricity_cost": 1.147336665278266,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 1.795357852507145,
+   "online_cost_seconds": 0.29894006168322174,
+   "solve_success": 0.9871550078111438,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8316864811057445,
+   "max_excursion": {
+    "temperature": 6.241857773995797,
+    "co2": 0.0,
+    "humidity": 7.899471278425693,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 514.2244395550545,
+    "co2": 0.0,
+    "humidity": 1785.81662083157,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.15",
+   "seed": 3,
+   "mismatch": 0.15,
+   "net": -6.821674271154192,
+   "revenue": 5.630687459182141,
+   "heating_cost": 10.088809624619325,
+   "co2_cost": 1.2541389548865605,
+   "electricity_cost": 1.1094131508304497,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.5191796619888382,
+   "online_cost_seconds": 0.22734556129300595,
+   "solve_success": 0.9973962853671238,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.9841047256129816,
+   "max_excursion": {
+    "temperature": 4.756803114603823,
+    "co2": 0.0,
+    "humidity": 11.632591775932454,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 379.307708239656,
+    "co2": 0.0,
+    "humidity": 420.4459910818557,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.15",
+   "seed": 4,
+   "mismatch": 0.15,
+   "net": -6.579959583771507,
+   "revenue": 6.645765321506716,
+   "heating_cost": 11.237951551268173,
+   "co2_cost": 1.023931052085619,
+   "electricity_cost": 0.9638423019244318,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.153603325941697,
+   "online_cost_seconds": 0.2097451765873833,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.8185913639288427,
+   "max_excursion": {
+    "temperature": 4.934417566363944,
+    "co2": 0.0,
+    "humidity": 11.159402802055425,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 96.2926946667146,
+    "co2": 0.0,
+    "humidity": 150.1761893355412,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.20",
+   "seed": 0,
+   "mismatch": 0.2,
+   "net": -10.905470893241997,
+   "revenue": 3.798873835447824,
+   "heating_cost": 12.26534513006756,
+   "co2_cost": 1.320006423985477,
+   "electricity_cost": 1.1189931746367852,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 2.37429614715489,
+   "online_cost_seconds": 0.1974020043239969,
+   "solve_success": 0.987328588786669,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 4.03219395222372,
+   "max_excursion": {
+    "temperature": 3.847364754069268,
+    "co2": 0.0,
+    "humidity": 11.875536644362725,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 30.35094855578698,
+    "co2": 0.0,
+    "humidity": 44.23241423239898,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.20",
+   "seed": 1,
+   "mismatch": 0.2,
+   "net": -5.691389592893845,
+   "revenue": 6.738039907225726,
+   "heating_cost": 7.1430599422818775,
+   "co2_cost": 1.5731431874004318,
+   "electricity_cost": 3.7132263704372623,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.211274942016079,
+   "online_cost_seconds": 0.18441349643751628,
+   "solve_success": 0.9934039229300469,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8522520001148486,
+   "max_excursion": {
+    "temperature": 5.174534993285471,
+    "co2": 0.0,
+    "humidity": 11.8044128476905,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 285.7131928333977,
+    "co2": 0.0,
+    "humidity": 2690.983017868611,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.20",
+   "seed": 2,
+   "mismatch": 0.2,
+   "net": -13.338363131845139,
+   "revenue": 6.384358252296335,
+   "heating_cost": 6.268504130802664,
+   "co2_cost": 2.5942956332916696,
+   "electricity_cost": 10.859921620047135,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.990223907685209,
+   "online_cost_seconds": 0.5151711388813677,
+   "solve_success": 0.780940808887346,
+   "violated": {
+    "temperature": true,
+    "co2": true,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [
+     "humid_hours"
+    ],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.3288534780670835,
+   "max_excursion": {
+    "temperature": 10.194691484642236,
+    "co2": 74.68592338277676,
+    "humidity": 9.288124440612265,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 2656.2788381774117,
+    "co2": 18.67148084569419,
+    "humidity": 3760.9538420558233,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.20",
+   "seed": 3,
+   "mismatch": 0.2,
+   "net": -6.086581026792972,
+   "revenue": 4.895971075273129,
+   "heating_cost": 8.793708428149662,
+   "co2_cost": 1.1271394700453161,
+   "electricity_cost": 1.061704203871125,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.0599819220457056,
+   "online_cost_seconds": 0.20612286341338631,
+   "solve_success": 0.9944454087831973,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.601236523714149,
+   "max_excursion": {
+    "temperature": 4.3041627233586865,
+    "co2": 0.0,
+    "humidity": 11.663513743805723,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 486.91269253295684,
+    "co2": 0.0,
+    "humidity": 791.7243204431066,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.20",
+   "seed": 4,
+   "mismatch": 0.2,
+   "net": -7.9601284982862275,
+   "revenue": 5.800063649055353,
+   "heating_cost": 11.890478582981741,
+   "co2_cost": 1.027667565530364,
+   "electricity_cost": 0.8420459988294755,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.6250397806595958,
+   "online_cost_seconds": 0.18838061809554466,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.25536282629687,
+   "max_excursion": {
+    "temperature": 4.085097834017265,
+    "co2": 0.0,
+    "humidity": 11.344931760978852,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 48.16419274978381,
+    "co2": 0.0,
+    "humidity": 48.107894731707034,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -1.6076154242219172,
+   "revenue": 10.498023704666274,
+   "heating_cost": 7.381884947601705,
+   "co2_cost": 1.4495133717075468,
+   "electricity_cost": 3.2742408095789384,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.561264815416421,
+   "online_cost_seconds": 0.18909886831124895,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8653491366654207,
+   "max_excursion": {
+    "temperature": 7.873748653391215,
+    "co2": 0.0,
+    "humidity": 11.508645083112498,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 728.03946283714,
+    "co2": 0.0,
+    "humidity": 1260.6009401355761,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.03",
+   "seed": 0,
+   "mismatch": 0.025,
+   "net": -2.1000142998121163,
+   "revenue": 10.470053415544664,
+   "heating_cost": 8.148935601298732,
+   "co2_cost": 1.3770139530500671,
+   "electricity_cost": 3.044118161007982,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.5437833847154145,
+   "online_cost_seconds": 0.19147621960880792,
+   "solve_success": 0.9994792570734248,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0065192296470005,
+   "max_excursion": {
+    "temperature": 7.205438332256699,
+    "co2": 0.0,
+    "humidity": 10.07920225578573,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 488.3025658393226,
+    "co2": 0.0,
+    "humidity": 875.8788287221903,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.03",
+   "seed": 1,
+   "mismatch": 0.025,
+   "net": -2.143810538279773,
+   "revenue": 10.219115511430832,
+   "heating_cost": 7.465148605924956,
+   "co2_cost": 1.4640041153585845,
+   "electricity_cost": 3.433773328427066,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.38694719464427,
+   "online_cost_seconds": 0.18843735408979287,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8848836378730156,
+   "max_excursion": {
+    "temperature": 8.048173821845028,
+    "co2": 0.0,
+    "humidity": 11.427426397727814,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 580.0288218080909,
+    "co2": 0.0,
+    "humidity": 1227.2301075743896,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.03",
+   "seed": 2,
+   "mismatch": 0.025,
+   "net": -1.2555835314340005,
+   "revenue": 10.677654140860318,
+   "heating_cost": 7.169201232947497,
+   "co2_cost": 1.3679588621396015,
+   "electricity_cost": 3.39607757720722,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.673533838037698,
+   "online_cost_seconds": 0.19134661522913285,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8548501245588682,
+   "max_excursion": {
+    "temperature": 6.978865786903263,
+    "co2": 0.0,
+    "humidity": 11.496562964743717,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 515.497260534171,
+    "co2": 0.0,
+    "humidity": 1374.2772643607857,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.03",
+   "seed": 3,
+   "mismatch": 0.025,
+   "net": -2.6539708071956003,
+   "revenue": 9.712121313272041,
+   "heating_cost": 7.961998206668153,
+   "co2_cost": 1.428097798225328,
+   "electricity_cost": 2.9759961155741603,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.070075820795025,
+   "online_cost_seconds": 0.17316815907525127,
+   "solve_success": 0.9993056760978997,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.037120177619481,
+   "max_excursion": {
+    "temperature": 7.926362642998508,
+    "co2": 0.0,
+    "humidity": 11.507776351573611,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 683.4197464832474,
+    "co2": 0.0,
+    "humidity": 930.1181809515716,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.03",
+   "seed": 4,
+   "mismatch": 0.025,
+   "net": -1.2811323701197335,
+   "revenue": 10.420607299238245,
+   "heating_cost": 7.870623296908047,
+   "co2_cost": 1.3191679613347187,
+   "electricity_cost": 2.5119484111152124,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.512879562023903,
+   "online_cost_seconds": 0.22206289050081549,
+   "solve_success": 0.9998264190244749,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9596744396068158,
+   "max_excursion": {
+    "temperature": 7.8322092838820065,
+    "co2": 0.0,
+    "humidity": 11.312405334294525,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 637.7656134191433,
+    "co2": 0.0,
+    "humidity": 957.4003547097611,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.05",
+   "seed": 0,
+   "mismatch": 0.05,
+   "net": -3.0466061662859296,
+   "revenue": 10.485855243329507,
+   "heating_cost": 8.87867232811992,
+   "co2_cost": 1.4720318884746337,
+   "electricity_cost": 3.1817571930208812,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.553659527080941,
+   "online_cost_seconds": 0.21525070049760553,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.108028594983158,
+   "max_excursion": {
+    "temperature": 7.386451590845756,
+    "co2": 0.0,
+    "humidity": 11.769854503683831,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 364.9483610578177,
+    "co2": 0.0,
+    "humidity": 633.9529833693508,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.05",
+   "seed": 1,
+   "mismatch": 0.05,
+   "net": -2.0895682878225372,
+   "revenue": 10.381279732258893,
+   "heating_cost": 7.435086435911527,
+   "co2_cost": 1.4426564794661245,
+   "electricity_cost": 3.5931051047037785,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.4882998326618075,
+   "online_cost_seconds": 0.2134605848042977,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9218349200446907,
+   "max_excursion": {
+    "temperature": 7.641389693864506,
+    "co2": 0.0,
+    "humidity": 11.003228462047986,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 488.5483138196749,
+    "co2": 0.0,
+    "humidity": 1272.8712194611148,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.05",
+   "seed": 2,
+   "mismatch": 0.05,
+   "net": 0.8859677051603807,
+   "revenue": 10.175200099293217,
+   "heating_cost": 6.719322049788804,
+   "co2_cost": 1.0781818989351737,
+   "electricity_cost": 1.4917284454088586,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.3595000620582605,
+   "online_cost_seconds": 0.2580324112580593,
+   "solve_success": 0.9993056760978997,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0387124963642025,
+   "max_excursion": {
+    "temperature": 7.4878588363274226,
+    "co2": 0.0,
+    "humidity": 11.61923289197398,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 261.159355313942,
+    "co2": 0.0,
+    "humidity": 1029.3901421947498,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.05",
+   "seed": 3,
+   "mismatch": 0.05,
+   "net": -3.1647849808758064,
+   "revenue": 9.18480820370312,
+   "heating_cost": 8.589922877546078,
+   "co2_cost": 1.4415729662560355,
+   "electricity_cost": 2.3180973407768137,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.74050512731445,
+   "online_cost_seconds": 0.21245190053104007,
+   "solve_success": 0.9986113521957993,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.2541280272105793,
+   "max_excursion": {
+    "temperature": 7.988677813210962,
+    "co2": 0.0,
+    "humidity": 10.07920225578573,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 551.0365713992999,
+    "co2": 0.0,
+    "humidity": 696.728688127652,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.05",
+   "seed": 4,
+   "mismatch": 0.05,
+   "net": -1.6769453726644379,
+   "revenue": 10.074357767668491,
+   "heating_cost": 8.449013044413146,
+   "co2_cost": 1.3394228856115435,
+   "electricity_cost": 1.9628672103082392,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.296473604792807,
+   "online_cost_seconds": 0.22828514093408256,
+   "solve_success": 0.9996528380489499,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.0976856892160045,
+   "max_excursion": {
+    "temperature": 8.084377721327536,
+    "co2": 0.0,
+    "humidity": 11.190745388337419,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 491.365847826905,
+    "co2": 0.0,
+    "humidity": 621.9453468358818,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -3.5779998303831064,
+   "revenue": 9.524541133563648,
+   "heating_cost": 9.805320544319109,
+   "co2_cost": 1.3205949907466785,
+   "electricity_cost": 1.9766254288809666,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.95283820847728,
+   "online_cost_seconds": 0.24254780129690368,
+   "solve_success": 0.9989585141468496,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.6353983554102762,
+   "max_excursion": {
+    "temperature": 6.604443803865275,
+    "co2": 0.0,
+    "humidity": 11.528443177173259,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 188.3144281397078,
+    "co2": 0.0,
+    "humidity": 362.877318618799,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 1,
+   "mismatch": 0.1,
+   "net": -2.5212697008476823,
+   "revenue": 10.618746245529394,
+   "heating_cost": 7.331040121796897,
+   "co2_cost": 1.4552960034218287,
+   "electricity_cost": 4.353679821158352,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.636716403455871,
+   "online_cost_seconds": 0.217907635349598,
+   "solve_success": 0.9972227043915987,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9004268017655446,
+   "max_excursion": {
+    "temperature": 7.691792246533711,
+    "co2": 0.0,
+    "humidity": 11.62023010072275,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 441.04154494387166,
+    "co2": 0.0,
+    "humidity": 1624.8265790142461,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 2,
+   "mismatch": 0.1,
+   "net": 0.5843688318169402,
+   "revenue": 7.950331557598406,
+   "heating_cost": 5.990840584791835,
+   "co2_cost": 0.7205578917180352,
+   "electricity_cost": 0.6545642492715958,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.968957223499004,
+   "online_cost_seconds": 0.30614386475833943,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9772293718525242,
+   "max_excursion": {
+    "temperature": 6.084688580874195,
+    "co2": 0.0,
+    "humidity": 9.911960372126202,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 253.60228198934414,
+    "co2": 0.0,
+    "humidity": 1305.183546493571,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 3,
+   "mismatch": 0.1,
+   "net": -3.7242364089470055,
+   "revenue": 8.657824539337101,
+   "heating_cost": 9.204779449096826,
+   "co2_cost": 1.2513932653489694,
+   "electricity_cost": 1.9258882338383099,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.411140337085688,
+   "online_cost_seconds": 0.22624988043716857,
+   "solve_success": 0.9984377712202742,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.483267971364065,
+   "max_excursion": {
+    "temperature": 8.142795937356347,
+    "co2": 0.0,
+    "humidity": 11.58457793415998,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 396.426314403797,
+    "co2": 0.0,
+    "humidity": 554.3935336802083,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 4,
+   "mismatch": 0.1,
+   "net": -2.788522843213592,
+   "revenue": 9.521336488794223,
+   "heating_cost": 9.337378667031803,
+   "co2_cost": 1.413667422162831,
+   "electricity_cost": 1.5588132428131825,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.950835305496389,
+   "online_cost_seconds": 0.2245829980391766,
+   "solve_success": 0.9991320951223746,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.298440424132257,
+   "max_excursion": {
+    "temperature": 7.002910876282065,
+    "co2": 0.0,
+    "humidity": 10.07920225578573,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 320.1812711281482,
+    "co2": 0.0,
+    "humidity": 371.1734874114371,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.15",
+   "seed": 0,
+   "mismatch": 0.15,
+   "net": -6.056803323470459,
+   "revenue": 7.302594556180881,
+   "heating_cost": 10.612697413599925,
+   "co2_cost": 1.362216032731608,
+   "electricity_cost": 1.3844844333198063,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.564121597613051,
+   "online_cost_seconds": 0.2312984343258633,
+   "solve_success": 0.9928831800034716,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.1437222256767354,
+   "max_excursion": {
+    "temperature": 6.066297166860386,
+    "co2": 0.0,
+    "humidity": 11.777307009995894,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 86.83443201483165,
+    "co2": 0.0,
+    "humidity": 183.46446557136161,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.15",
+   "seed": 1,
+   "mismatch": 0.15,
+   "net": -3.2178631182399258,
+   "revenue": 9.921185143572547,
+   "heating_cost": 6.970953415994678,
+   "co2_cost": 1.415127180034588,
+   "electricity_cost": 4.752967665783207,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.2007407147328415,
+   "online_cost_seconds": 0.21624879012509915,
+   "solve_success": 0.9944454087831973,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8624203020973469,
+   "max_excursion": {
+    "temperature": 7.4766169058198795,
+    "co2": 0.0,
+    "humidity": 11.65622383141283,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 407.0992711298541,
+    "co2": 0.0,
+    "humidity": 2013.3893363053417,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.15",
+   "seed": 2,
+   "mismatch": 0.15,
+   "net": -3.7292118953035605,
+   "revenue": 5.343694312758268,
+   "heating_cost": 5.96842072517531,
+   "co2_cost": 1.3050718359587306,
+   "electricity_cost": 1.799413646927787,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.3398089454739175,
+   "online_cost_seconds": 0.3271381296420426,
+   "solve_success": 0.9477521263669502,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8463077598079174,
+   "max_excursion": {
+    "temperature": 7.054324819480101,
+    "co2": 0.0,
+    "humidity": 10.07920225578573,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 642.5639861880851,
+    "co2": 0.0,
+    "humidity": 1889.5705995275225,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.15",
+   "seed": 3,
+   "mismatch": 0.15,
+   "net": -3.514948889962941,
+   "revenue": 7.730793417245039,
+   "heating_cost": 9.023339556500341,
+   "co2_cost": 1.0021380800239512,
+   "electricity_cost": 1.2202646706836868,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.831745885778149,
+   "online_cost_seconds": 0.2259697843780168,
+   "solve_success": 0.9963547995139733,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.8085221734904304,
+   "max_excursion": {
+    "temperature": 7.013412967386374,
+    "co2": 0.0,
+    "humidity": 11.648470235414706,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 340.30411181567354,
+    "co2": 0.0,
+    "humidity": 571.1507821923352,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.15",
+   "seed": 4,
+   "mismatch": 0.15,
+   "net": -3.4403101109440666,
+   "revenue": 9.057920751537825,
+   "heating_cost": 10.244187564880706,
+   "co2_cost": 1.1359301700487419,
+   "electricity_cost": 1.1181131275524454,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.66120046971114,
+   "online_cost_seconds": 0.20356489668095862,
+   "solve_success": 1.0,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.6918978579018713,
+   "max_excursion": {
+    "temperature": 7.11275602694325,
+    "co2": 0.0,
+    "humidity": 11.369446127569816,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 201.9945728456962,
+    "co2": 0.0,
+    "humidity": 269.90711622440614,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.20",
+   "seed": 0,
+   "mismatch": 0.2,
+   "net": -7.052751276982994,
+   "revenue": 6.539430970349061,
+   "heating_cost": 11.210879091935693,
+   "co2_cost": 1.234419887742077,
+   "electricity_cost": 1.146883267654285,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 4.087144356468163,
+   "online_cost_seconds": 0.20400055404598916,
+   "solve_success": 0.9902794653705954,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.7427890751224027,
+   "max_excursion": {
+    "temperature": 6.168469572693301,
+    "co2": 0.0,
+    "humidity": 11.60814761431378,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 65.11849474435185,
+    "co2": 0.0,
+    "humidity": 100.73407787898876,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.20",
+   "seed": 1,
+   "mismatch": 0.2,
+   "net": -3.282829325611278,
+   "revenue": 9.659384410493587,
+   "heating_cost": 6.697524366723627,
+   "co2_cost": 1.3325172946900505,
+   "electricity_cost": 4.912172074691188,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.037115256558492,
+   "online_cost_seconds": 0.13355244518002216,
+   "solve_success": 0.9909737892726957,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.8325833674843084,
+   "max_excursion": {
+    "temperature": 8.426796029244773,
+    "co2": 0.0,
+    "humidity": 11.917472204297482,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 464.2419835914601,
+    "co2": 0.0,
+    "humidity": 2311.9094587770196,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.20",
+   "seed": 2,
+   "mismatch": 0.2,
+   "net": -11.200440493799064,
+   "revenue": 10.266899652711906,
+   "heating_cost": 6.089921582770274,
+   "co2_cost": 2.705898346209163,
+   "electricity_cost": 12.671520217531537,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 6.416812282944941,
+   "online_cost_seconds": 0.24700361470672622,
+   "solve_success": 0.749349071341781,
+   "violated": {
+    "temperature": true,
+    "co2": true,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [
+     "humid_hours"
+    ],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.3046022493686054,
+   "max_excursion": {
+    "temperature": 13.161264077722652,
+    "co2": 60.98363016164012,
+    "humidity": 11.085448395467381,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 2696.9375118634234,
+    "co2": 29.59178696968752,
+    "humidity": 3379.938179258536,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.20",
+   "seed": 3,
+   "mismatch": 0.2,
+   "net": -3.9243769446252728,
+   "revenue": 6.267212131773235,
+   "heating_cost": 8.01659509982937,
+   "co2_cost": 1.0261747801502836,
+   "electricity_cost": 1.148819196418854,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 3.9170075823582717,
+   "online_cost_seconds": 0.1388942578745709,
+   "solve_success": 0.993577503905572,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 2.4777711099067474,
+   "max_excursion": {
+    "temperature": 5.681100196317065,
+    "co2": 0.0,
+    "humidity": 11.65947536022044,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 355.7222681987735,
+    "co2": 0.0,
+    "humidity": 845.8502461104415,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.20",
+   "seed": 4,
+   "mismatch": 0.2,
+   "net": -4.4643680981018825,
+   "revenue": 8.434024749074112,
+   "heating_cost": 10.855149847130443,
+   "co2_cost": 1.0997506444194867,
+   "electricity_cost": 0.9434923556260655,
+   "steps": 5761,
+   "fruit_growth_kg_fw": 5.27126546817132,
+   "online_cost_seconds": 0.11690935230433575,
+   "solve_success": 0.9977434473181739,
+   "violated": {
+    "temperature": true,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": true
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 3.136816783189704,
+   "max_excursion": {
+    "temperature": 7.118419693965406,
+    "co2": 0.0,
+    "humidity": 11.342351428073329,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 163.36451035857772,
+    "co2": 0.0,
+    "humidity": 177.5912105126207,
+    "lamp": 0.0
+   }
+  }
+ ]
+}

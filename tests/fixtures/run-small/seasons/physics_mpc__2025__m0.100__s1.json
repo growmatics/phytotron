@@ -1,0 +1,22 @@
+{
+ "task": {
+  "arm": "physics_mpc",
+  "year": 2025,
+  "mismatch": 0.1,
+  "seed": 1,
+  "season_days": 3,
+  "controller": null
+ },
+ "label": "2025/m0.10",
+ "error": "RuntimeError: solver returned no solution",
+ "stage": "season",
+ "failed_at": "2026-10-11T08:00:40+00:00",
+ "traceback": "Traceback (most recent call last):\n  ...\nRuntimeError: solver returned no solution\n",
+ "attempts": [
+  {
+   "error": "RuntimeError: solver returned no solution",
+   "stage": "season",
+   "failed_at": "2026-10-11T07:30:40+00:00"
+  }
+ ]
+}

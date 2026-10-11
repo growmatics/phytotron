@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+dist/
+build/
+*.egg-info/
+
+# Experiment artifacts
+datasets/
+checkpoints/
+runs/
+outputs/
+*.ckpt
+*.pt
+*.pth
+
+# Web
+web/node_modules/
+web/dist/
+
+# Fetched weather (regenerate with examples/fetch_weather.py)
+weather/

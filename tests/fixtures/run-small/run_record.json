@@ -1,0 +1,17 @@
+{
+ "timestamp": "2026-10-11T08:00:00+00:00",
+ "git_commit": "fixture",
+ "git_dirty": false,
+ "config_sha256": "fixture",
+ "season_days": 3,
+ "workers": 1,
+ "grid": [
+  "incumbent__2024__m0.000__s0",
+  "incumbent__2025__m0.000__s0",
+  "physics_mpc__2024__m0.000__s0",
+  "physics_mpc__2024__m0.100__s0",
+  "physics_mpc__2024__m0.100__s1",
+  "physics_mpc__2025__m0.100__s0",
+  "physics_mpc__2025__m0.100__s1"
+ ]
+}

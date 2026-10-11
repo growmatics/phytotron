@@ -1,0 +1,235 @@
+{
+  "generated_from": {
+    "config": "configs/benchmark.yaml",
+    "config_sha256": "2764f38daef79949a88919a96be0913572cf3a5cb2a9be8624298b5da3495a09",
+    "rules_status": "fixed",
+    "protocol_version": 2
+  },
+  "gate": {
+    "trial_unit": "season",
+    "confidence": 0.95,
+    "max_failing_share": 0.05,
+    "min_seasons": 60,
+    "season_fails_class_if": "any rule of the class breaks",
+    "crashed_season_counts_as": "failing",
+    "season_not_started_counts_as": "not started, listed",
+    "failing_seasons_allowed": [
+      {
+        "seasons": 60,
+        "allowed": 0
+      },
+      {
+        "seasons": 93,
+        "allowed": 1
+      },
+      {
+        "seasons": 100,
+        "allowed": 1
+      },
+      {
+        "seasons": 124,
+        "allowed": 2
+      },
+      {
+        "seasons": 153,
+        "allowed": 3
+      }
+    ]
+  },
+  "gated_classes": [
+    {
+      "class": "humidity",
+      "rules": [
+        {
+          "key": "humid_hours",
+          "label": "Humid hours",
+          "harm": "grey mould (Botrytis) risk, accumulated",
+          "fails_when": "the 7-day mean of daily hours above 90% RH exceeds 7 hours a day",
+          "kind": "daily_hours",
+          "params": {
+            "threshold": 90.0,
+            "max_hours_per_day": 7.0,
+            "window_days": 7
+          },
+          "sources": [
+            {
+              "key": "yunis_1994",
+              "text": "Yunis, H., Shtienberg, D., Elad, Y. and Mahrer, Y. (1994). Qualitative approach for modelling outbreaks of grey mould epidemics in non-heated cucumber greenhouses. Crop Protection 13(2):99-104.",
+              "url": "https://doi.org/10.1016/0261-2194(94)90158-9"
+            },
+            {
+              "key": "sentelhas_2008",
+              "text": "Sentelhas, P.C. et al. (2008). Suitability of relative humidity as an estimator of leaf wetness duration. Agricultural and Forest Meteorology 148:392-400.",
+              "url": "https://doi.org/10.1016/j.agrformet.2007.09.011"
+            }
+          ]
+        },
+        {
+          "key": "longest_run",
+          "label": "Longest humid run",
+          "harm": "one long wet spell",
+          "fails_when": "RH stays above 93% for more than 48 hours in a row",
+          "kind": "longest_run",
+          "params": {
+            "threshold": 93.0,
+            "max_hours": 48.0
+          },
+          "sources": [
+            {
+              "key": "koerner_2003",
+              "text": "Körner, O. (2003). Crop based climate regimes for energy saving in greenhouse cultivation. PhD thesis, Wageningen University.",
+              "url": "https://edepot.wur.nl/27517"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "temperature",
+      "rules": [
+        {
+          "key": "mean_6d",
+          "label": "6-day mean",
+          "harm": "chronic heat or cold; growth and development",
+          "fails_when": "the 6-day mean air temperature is more than 4 C from the 6-day mean target, where each day's target is 17.5 C plus 1.5 C per 1000 J/cm2 of that day's outdoor radiation",
+          "kind": "light_mean",
+          "params": {
+            "base": 17.5,
+            "per_1000_j_cm2": 1.5,
+            "band": 4.0,
+            "window_days": 6
+          },
+          "sources": [
+            {
+              "key": "koerner_challa_2003",
+              "text": "Körner, O. and Challa, H. (2003). Design for an improved temperature integration concept in greenhouse cultivation. Computers and Electronics in Agriculture 39(1):39-59.",
+              "url": "https://doi.org/10.1016/S0168-1699(03)00006-1"
+            },
+            {
+              "key": "hnt_tomaat_2010",
+              "text": "de Gelder, A., Warmenhoven, M. and Grootscholten, M. (2010). Het Nieuwe Telen Tomaat 2010. Wageningen UR Glastuinbouw, GTB-1178.",
+              "url": "https://edepot.wur.nl/247906"
+            }
+          ]
+        },
+        {
+          "key": "mean_24h",
+          "label": "24-hour mean",
+          "harm": "heat; fruit set",
+          "fails_when": "the 24-hour mean exceeds 26 C",
+          "kind": "rolling_mean",
+          "params": {
+            "window_h": 24,
+            "high": 26.0
+          },
+          "sources": [
+            {
+              "key": "adams_2001",
+              "text": "Adams, S.R., Cockshull, K.E. and Cave, C.R.J. (2001). Effect of temperature on the growth and development of tomato fruits. Annals of Botany 88:869-877.",
+              "url": "https://doi.org/10.1006/anbo.2001.1524"
+            }
+          ]
+        },
+        {
+          "key": "dose",
+          "label": "Dose of extremes",
+          "harm": "short extremes",
+          "fails_when": "the dose in any 24 hours exceeds 1. Time below 14 C or above 30 C adds to it with Körner and Challa's exponential weight (exponents 160 and 30), 0 at 14 or 30 C and 1 at 10 or 34 C; 30 minutes at 10 or 34 C is a full dose",
+          "kind": "dose",
+          "params": {
+            "onset_low": 14.0,
+            "limit_low": 10.0,
+            "onset_high": 30.0,
+            "limit_high": 34.0,
+            "full_dose_min": 30.0,
+            "window_h": 24,
+            "heat_exponent": 160.0,
+            "cold_exponent": 30.0
+          },
+          "sources": [
+            {
+              "key": "koerner_challa_2003",
+              "text": "Körner, O. and Challa, H. (2003). Design for an improved temperature integration concept in greenhouse cultivation. Computers and Electronics in Agriculture 39(1):39-59.",
+              "url": "https://doi.org/10.1016/S0168-1699(03)00006-1"
+            }
+          ]
+        },
+        {
+          "key": "peak",
+          "label": "Absolute limits",
+          "harm": "acute damage",
+          "fails_when": "the air temperature stays below 10 C or above 34 C for 30 minutes or more in a row",
+          "kind": "peak",
+          "params": {
+            "low": 10.0,
+            "high": 34.0,
+            "min_minutes": 30.0
+          },
+          "sources": [
+            {
+              "key": "koerner_challa_2003",
+              "text": "Körner, O. and Challa, H. (2003). Design for an improved temperature integration concept in greenhouse cultivation. Computers and Electronics in Agriculture 39(1):39-59.",
+              "url": "https://doi.org/10.1016/S0168-1699(03)00006-1"
+            },
+            {
+              "key": "vanthoor_2011",
+              "text": "Vanthoor, B.H.E. et al. (2011). A methodology for model-based greenhouse design: Part 2, description and validation of a tomato yield model. Biosystems Engineering 110:378-395.",
+              "url": "https://doi.org/10.1016/j.biosystemseng.2011.08.005"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "reported_classes": [
+    "co2",
+    "lamp"
+  ],
+  "sources": [
+    {
+      "key": "adams_2001",
+      "text": "Adams, S.R., Cockshull, K.E. and Cave, C.R.J. (2001). Effect of temperature on the growth and development of tomato fruits. Annals of Botany 88:869-877.",
+      "url": "https://doi.org/10.1006/anbo.2001.1524"
+    },
+    {
+      "key": "de_koning_1988",
+      "text": "de Koning, A.N.M. (1988). More efficient use of base load heating with a temperature integrating control programme. Effect on development, growth and production of tomato. Acta Horticulturae 229:233-238.",
+      "url": "https://doi.org/10.17660/ActaHortic.1988.229.22"
+    },
+    {
+      "key": "eden_1996",
+      "text": "Eden, M.A., Hill, R.A., Beresford, R. and Stewart, A. (1996). The influence of inoculum concentration, relative humidity, and temperature on infection of greenhouse tomatoes by Botrytis cinerea. Plant Pathology 45:795-806.",
+      "url": "https://doi.org/10.1046/j.1365-3059.1996.d01-163.x"
+    },
+    {
+      "key": "hnt_tomaat_2010",
+      "text": "de Gelder, A., Warmenhoven, M. and Grootscholten, M. (2010). Het Nieuwe Telen Tomaat 2010. Wageningen UR Glastuinbouw, GTB-1178.",
+      "url": "https://edepot.wur.nl/247906"
+    },
+    {
+      "key": "koerner_2003",
+      "text": "Körner, O. (2003). Crop based climate regimes for energy saving in greenhouse cultivation. PhD thesis, Wageningen University.",
+      "url": "https://edepot.wur.nl/27517"
+    },
+    {
+      "key": "koerner_challa_2003",
+      "text": "Körner, O. and Challa, H. (2003). Design for an improved temperature integration concept in greenhouse cultivation. Computers and Electronics in Agriculture 39(1):39-59.",
+      "url": "https://doi.org/10.1016/S0168-1699(03)00006-1"
+    },
+    {
+      "key": "sentelhas_2008",
+      "text": "Sentelhas, P.C. et al. (2008). Suitability of relative humidity as an estimator of leaf wetness duration. Agricultural and Forest Meteorology 148:392-400.",
+      "url": "https://doi.org/10.1016/j.agrformet.2007.09.011"
+    },
+    {
+      "key": "vanthoor_2011",
+      "text": "Vanthoor, B.H.E. et al. (2011). A methodology for model-based greenhouse design: Part 2, description and validation of a tomato yield model. Biosystems Engineering 110:378-395.",
+      "url": "https://doi.org/10.1016/j.biosystemseng.2011.08.005"
+    },
+    {
+      "key": "yunis_1994",
+      "text": "Yunis, H., Shtienberg, D., Elad, Y. and Mahrer, Y. (1994). Qualitative approach for modelling outbreaks of grey mould epidemics in non-heated cucumber greenhouses. Crop Protection 13(2):99-104.",
+      "url": "https://doi.org/10.1016/0261-2194(94)90158-9"
+    }
+  ]
+}

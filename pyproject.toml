@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel.force-include]
+# A non-editable install still finds the benchmark configuration.
+"configs/benchmark.yaml" = "phytotron/configs/benchmark.yaml"
+
+[tool.hatch.metadata]
+# gl_gym is a direct git reference (the simulator, pinned to v0.2.1); hatchling
+# refuses direct references in project.dependencies unless this is opt-in.
+allow-direct-references = true
+
+[project]
+name = "phytotron"
+version = "0.1.0"
+description = "An open virtual phytotron for benchmarking greenhouse climate control."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"  # numpy<2 has no wheels for 3.13
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Growmatics B.V." }]
+# Aligned with the GreenLight-Gym2 v0.2.1 pins so both install in one env; the pins are those
+# of Growmatics' reference run of 24 July 2026 (docs/validation.md, section 1).
+# The v0.2.1 tag (commit 8bb5b28) still declares version 0.2.0 in its metadata, so pip,
+# pip-audit and the SBOM report gl_gym 0.2.0. That is the right code, not a wrong pin.
+dependencies = [
+  "gymnasium==0.29.1",
+  "casadi==3.6.7",
+  "numpy<2.0",
+  "scipy>=1.16",
+  "pandas",
+  "pyyaml>=6.0.2",
+  "gl_gym @ git+https://github.com/BartvLaatum/GreenLight-Gym2@v0.2.1",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy", "pytest", "pytest-cov", "pip-audit"]
+
+[project.urls]
+Homepage = "https://growmatics.ai/phytotron"
+Repository = "https://github.com/growmatics/phytotron"
+Documentation = "https://github.com/growmatics/phytotron/tree/main/docs"
+Changelog = "https://github.com/growmatics/phytotron/blob/main/CHANGELOG.md"
+
+[project.scripts]
+phytotron = "phytotron.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP", "PL", "RUF"]
+ignore = ["PLR0913"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004"]         # explicit expected values in asserts are the point of a test
+"phytotron/envs/glg2.py" = ["PLC0415"]  # gl_gym is imported lazily (optional dependency)
+"phytotron/cli.py" = ["PLC0415"]  # commands are imported after pin_threads()
+"phytotron/data/fetch.py" = ["PLC0415"]  # entsoe is imported lazily (optional dependency)
+"phytotron/models/outputs.py" = ["PLC0415"]  # casadi imported lazily (keeps package import cheap)
+"phytotron/controllers/rule_based.py" = ["PLC0415"]  # gl_gym imported lazily
+"phytotron/controllers/mpc.py" = ["PLC0415", "PLR0915"]  # lazy imports; the OCP builder is one long method
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=phytotron --cov-report=term-missing"
+testpaths = ["tests"]
+markers = ["slow: multi-minute tests; deselect with -m 'not slow'"]
+
+[tool.coverage.run]
+# quickstart and fetch-weather need a live simulator or the network; the run command is
+# tested end to end with a fake season runner (tests/test_run_command.py).
+omit = ["phytotron/commands/quickstart.py", "phytotron/commands/fetch_weather.py"]
+
+[tool.coverage.report]
+# The load-bearing math (gate, degree-hours, hypervolume, estimators) must be covered.
+fail_under = 90
+show_missing = true

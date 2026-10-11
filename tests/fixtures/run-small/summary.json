@@ -1,0 +1,582 @@
+{
+ "record": {
+  "timestamp": "2026-10-11T08:00:00+00:00",
+  "git_commit": "fixture",
+  "git_dirty": false,
+  "config_sha256": "fixture",
+  "season_days": 3,
+  "workers": 1,
+  "grid": [
+   "incumbent__2024__m0.000__s0",
+   "incumbent__2025__m0.000__s0",
+   "physics_mpc__2024__m0.000__s0",
+   "physics_mpc__2024__m0.100__s0",
+   "physics_mpc__2024__m0.100__s1",
+   "physics_mpc__2025__m0.100__s0",
+   "physics_mpc__2025__m0.100__s1"
+  ],
+  "n_failed_seasons": 2,
+  "failed_seasons": [
+   {
+    "label": "2024/m0.10",
+    "arm": "physics_mpc",
+    "year": 2024,
+    "mismatch": 0.1,
+    "seed": 1,
+    "season_days": 3,
+    "controller": null,
+    "error": "FileNotFoundError: weather file for 2024",
+    "stage": "setup",
+    "counted": false
+   },
+   {
+    "label": "2025/m0.10",
+    "arm": "physics_mpc",
+    "year": 2025,
+    "mismatch": 0.1,
+    "seed": 1,
+    "season_days": 3,
+    "controller": null,
+    "error": "RuntimeError: solver returned no solution",
+    "stage": "season",
+    "counted": true
+   }
+  ]
+ },
+ "protocol": {
+  "version": 2,
+  "verdict": "pooled_mismatch_above_zero",
+  "gated_classes": [
+   "humidity",
+   "temperature"
+  ],
+  "bands": {
+   "humidity": [
+    2.0,
+    1.0
+   ],
+   "temperature": [
+    2.0,
+    1.0
+   ]
+  },
+  "primary_gate": "crop_rules",
+  "rules_status": "fixed",
+  "rules": {
+   "humidity": {
+    "humid_hours": {
+     "kind": "daily_hours",
+     "threshold": 90.0,
+     "max_hours_per_day": 7.0,
+     "window_days": 7
+    },
+    "longest_run": {
+     "kind": "longest_run",
+     "threshold": 93.0,
+     "max_hours": 48.0
+    }
+   },
+   "temperature": {
+    "mean_6d": {
+     "kind": "light_mean",
+     "base": 17.5,
+     "per_1000_j_cm2": 1.5,
+     "band": 4.0,
+     "window_days": 6
+    },
+    "mean_24h": {
+     "kind": "rolling_mean",
+     "window_h": 24,
+     "high": 26.0
+    },
+    "dose": {
+     "kind": "dose",
+     "onset_low": 14.0,
+     "limit_low": 10.0,
+     "onset_high": 30.0,
+     "limit_high": 34.0,
+     "full_dose_min": 30.0,
+     "window_h": 24,
+     "heat_exponent": 160.0,
+     "cold_exponent": 30.0
+    },
+    "peak": {
+     "kind": "peak",
+     "low": 10.0,
+     "high": 34.0,
+     "min_minutes": 30.0
+    }
+   }
+  }
+ },
+ "arms": {
+  "incumbent": {
+   "n_seasons": 2,
+   "n_failed": 0,
+   "seasons_not_started": 0,
+   "net_value_mean": 1.75,
+   "net_value_std": 0.25,
+   "breakdown_mean": {
+    "revenue": 5.75,
+    "heating_cost": 2.5,
+    "co2_cost": 0.5,
+    "electricity_cost": 1.0,
+    "fruit_growth_kg_fw": 3.59375
+   },
+   "online_cost_seconds": 0.0002,
+   "solve_success": null,
+   "verdict": {
+    "seasons": "all",
+    "n_seasons": 2,
+    "net_value_mean": 1.75,
+    "net_value_std": 0.25,
+    "gate": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop": null,
+    "gate_crop_counts": null,
+    "gate_banded": {
+     "humidity": false,
+     "temperature": false
+    },
+    "underpowered": true
+   },
+   "by_mismatch": {
+    "0.000": {
+     "n_seasons": 2,
+     "net_value_mean": 1.75,
+     "net_value_std": 0.25,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": null,
+     "gate_crop_counts": null,
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    }
+   },
+   "safety": {
+    "co2": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "humidity": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "lamp": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "temperature": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    }
+   }
+  },
+  "physics_mpc": {
+   "n_seasons": 3,
+   "n_failed": 1,
+   "seasons_not_started": 1,
+   "net_value_mean": -2.0,
+   "net_value_std": 0.816496580927726,
+   "breakdown_mean": {
+    "revenue": 2.0,
+    "heating_cost": 2.5,
+    "co2_cost": 0.5,
+    "electricity_cost": 1.0,
+    "fruit_growth_kg_fw": 1.25
+   },
+   "online_cost_seconds": 0.19000000000000003,
+   "solve_success": 0.9700000000000001,
+   "verdict": {
+    "seasons": "mismatch above 0, pooled",
+    "n_seasons": 3,
+    "net_value_mean": -2.5,
+    "net_value_std": 0.5,
+    "gate": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop": {
+     "humidity": false,
+     "temperature": false
+    },
+    "gate_crop_counts": {
+     "humidity": {
+      "failing": 2,
+      "seasons": 3,
+      "upper_bound": 0.9830475724915585
+     },
+     "temperature": {
+      "failing": 3,
+      "seasons": 3,
+      "upper_bound": 1.0
+     }
+    },
+    "gate_banded": {
+     "humidity": false,
+     "temperature": false
+    },
+    "underpowered": true
+   },
+   "by_mismatch": {
+    "0.000": {
+     "n_seasons": 1,
+     "net_value_mean": -1.0,
+     "net_value_std": 0.0,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 0,
+       "seasons": 1,
+       "upper_bound": 0.95
+      },
+      "temperature": {
+       "failing": 0,
+       "seasons": 1,
+       "upper_bound": 0.95
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    },
+    "0.100": {
+     "n_seasons": 3,
+     "net_value_mean": -2.5,
+     "net_value_std": 0.5,
+     "gate": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop": {
+      "humidity": false,
+      "temperature": false
+     },
+     "gate_crop_counts": {
+      "humidity": {
+       "failing": 2,
+       "seasons": 3,
+       "upper_bound": 0.9830475724915585
+      },
+      "temperature": {
+       "failing": 3,
+       "seasons": 3,
+       "upper_bound": 1.0
+      }
+     },
+     "gate_banded": {
+      "humidity": false,
+      "temperature": false
+     },
+     "underpowered": true
+    }
+   },
+   "safety": {
+    "co2": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "humidity": {
+     "incidence": 0.3333333333333333,
+     "mean_duration_h": 24.083333333333332,
+     "degree_hours": 240.83333333333334,
+     "worst_excursion": 10.0,
+     "season_violation_prob": 0.3333333333333333
+    },
+    "lamp": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    },
+    "temperature": {
+     "incidence": 0.0,
+     "mean_duration_h": 0.0,
+     "degree_hours": 0.0,
+     "worst_excursion": 0.0,
+     "season_violation_prob": 0.0
+    }
+   }
+  }
+ },
+ "pareto": {
+  "primary_gate": "crop_rules",
+  "gate_passers": [],
+  "gated": {
+   "arms": [
+    "incumbent"
+   ],
+   "non_dominated": [
+    "incumbent"
+   ],
+   "hypervolume": 0.0,
+   "hypervolume_vs_incumbent": 0.0,
+   "reference": "anti_ideal"
+  },
+  "ungated": {
+   "arms": [
+    "incumbent",
+    "physics_mpc"
+   ],
+   "non_dominated": [
+    "incumbent"
+   ],
+   "hypervolume": 1.0,
+   "hypervolume_vs_incumbent": 0.0,
+   "reference": "anti_ideal"
+  }
+ },
+ "seasons": [
+  {
+   "arm": "incumbent",
+   "label": "2024/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": 2.0,
+   "revenue": 6.0,
+   "heating_cost": 2.5,
+   "co2_cost": 0.5,
+   "electricity_cost": 1.0,
+   "steps": 289,
+   "fruit_growth_kg_fw": 3.75,
+   "online_cost_seconds": 0.0002,
+   "solve_success": null,
+   "violated": {
+    "temperature": false,
+    "co2": false,
+    "humidity": false,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": false,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": []
+   },
+   "night_humidity_deficit_g_m3": 3.0720667497774343,
+   "max_excursion": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "incumbent",
+   "label": "2025/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": 1.5,
+   "revenue": 5.5,
+   "heating_cost": 2.5,
+   "co2_cost": 0.5,
+   "electricity_cost": 1.0,
+   "steps": 289,
+   "fruit_growth_kg_fw": 3.4375,
+   "online_cost_seconds": 0.0002,
+   "solve_success": null,
+   "violated": {
+    "temperature": false,
+    "co2": false,
+    "humidity": false,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": false,
+    "temperature": false
+   },
+   "broken_rules": null,
+   "night_humidity_deficit_g_m3": null,
+   "max_excursion": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.00",
+   "seed": 0,
+   "mismatch": 0.0,
+   "net": -1.0,
+   "revenue": 3.0,
+   "heating_cost": 2.5,
+   "co2_cost": 0.5,
+   "electricity_cost": 1.0,
+   "steps": 289,
+   "fruit_growth_kg_fw": 1.875,
+   "online_cost_seconds": 0.19,
+   "solve_success": 0.97,
+   "violated": {
+    "temperature": false,
+    "co2": false,
+    "humidity": false,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": false,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": []
+   },
+   "night_humidity_deficit_g_m3": 3.0720667497774343,
+   "max_excursion": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2024/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -3.0,
+   "revenue": 1.0,
+   "heating_cost": 2.5,
+   "co2_cost": 0.5,
+   "electricity_cost": 1.0,
+   "steps": 289,
+   "fruit_growth_kg_fw": 0.625,
+   "online_cost_seconds": 0.19,
+   "solve_success": 0.97,
+   "violated": {
+    "temperature": false,
+    "co2": false,
+    "humidity": true,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": true,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [
+     "humid_hours",
+     "longest_run"
+    ],
+    "temperature": [
+     "mean_6d",
+     "mean_24h",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.9767935755174333,
+   "max_excursion": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 10.0,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 722.5,
+    "lamp": 0.0
+   }
+  },
+  {
+   "arm": "physics_mpc",
+   "label": "2025/m0.10",
+   "seed": 0,
+   "mismatch": 0.1,
+   "net": -2.0,
+   "revenue": 2.0,
+   "heating_cost": 2.5,
+   "co2_cost": 0.5,
+   "electricity_cost": 1.0,
+   "steps": 289,
+   "fruit_growth_kg_fw": 1.25,
+   "online_cost_seconds": 0.19,
+   "solve_success": 0.97,
+   "violated": {
+    "temperature": false,
+    "co2": false,
+    "humidity": false,
+    "lamp": false
+   },
+   "violated_banded": {
+    "humidity": false,
+    "temperature": false
+   },
+   "broken_rules": {
+    "humidity": [],
+    "temperature": [
+     "mean_6d",
+     "dose",
+     "peak"
+    ]
+   },
+   "night_humidity_deficit_g_m3": 1.6535147677640918,
+   "max_excursion": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   },
+   "degree_hours": {
+    "temperature": 0.0,
+    "co2": 0.0,
+    "humidity": 0.0,
+    "lamp": 0.0
+   }
+  }
+ ]
+}

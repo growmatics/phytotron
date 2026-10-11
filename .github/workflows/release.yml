@@ -1,0 +1,30 @@
+name: release
+
+# On a version tag: build a CycloneDX software bill of materials (SBOM) of the installed
+# environment and attach it to the GitHub release (created if it does not exist).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade pip setuptools
+      - run: pip install . cyclonedx-bom
+      - run: >
+          cyclonedx-py environment --pyproject pyproject.toml --output-reproducible
+          --output-format JSON -o "phytotron-${GITHUB_REF_NAME}.cdx.json"
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "See CHANGELOG.md."
+          gh release upload "$GITHUB_REF_NAME" "phytotron-${GITHUB_REF_NAME}.cdx.json" --clobber

@@ -1,0 +1,144 @@
+{
+  "git_commit": "1fb0045",
+  "git_dirty": false,
+  "config_sha256": "a9946acc69529a4738f6f03258537e883138c2dde21cbfab048bca4896fde315",
+  "testbed": "v0.2.1",
+  "glg2_checkout_commit": "8bb5b28",
+  "timestamp": "2026-10-10T13:58:25",
+  "timezone": "CEST (UTC+0200)",
+  "workers": 18,
+  "packages": {
+    "python": "3.12.3",
+    "phytotron": "0.0.0",
+    "gl-gym": "0.2.0",
+    "numpy": "1.26.4",
+    "scipy": "1.16.1",
+    "casadi": "3.6.7"
+  },
+  "inputs_sha256": {
+    "glg2/envs/TomatoEnv.yml": "974a734e020be3a068b35ff3afd9b995d544309d70583577ffb3467b895f4c0d",
+    "glg2/agents/rule_based.yml": "88546ddbe25cc2033eca95de08f4d957ef2d0ea8f54195242496437584c02463",
+    "weather/Amsterdam_OM/2022.csv": "b7ee1ace601f47d022a870bc50ff713f5817b64c4e5aa49af84b6e48706074a2",
+    "weather/Amsterdam_OM/2023.csv": "289fcaa56bba858e53c335469c7853f13c60df3813bb44bd80bdecc2400915d9",
+    "weather/Amsterdam_OM/2024.csv": "f969d717af407a31c45a888c1958cde85d9b288bb21f2acec364584798db57a9",
+    "weather/Amsterdam_OM/2025.csv": "19df0ed4be6cf260df17a71e3625dc3df78badf174601fa241d35447905241b5"
+  },
+  "arm_settings": {
+    "incumbent": {
+      "lamps_on": 0,
+      "lamps_off": 18,
+      "lamps_day_start": -1,
+      "lamps_day_stop": 366,
+      "lamps_off_sun": 400,
+      "lamp_rad_sum_limit": 10,
+      "temp_setpoint_day": 19.5,
+      "temp_setpoint_night": 16.5,
+      "heat_correction": 0,
+      "heat_deadzone": 5,
+      "co2_day": 800,
+      "vent_heat_Pband": 4,
+      "rh_max": 85,
+      "mech_dehumid_Pband": 2,
+      "vent_rh_Pband": 5,
+      "t_vent_off": 1,
+      "vent_cold_Pband": -1,
+      "thScrSpDay": 5,
+      "thScrSpNight": 10,
+      "thScrPband": -1,
+      "thScrDeadZone": 4,
+      "thScrRh": -2,
+      "thScrRhPband": 2,
+      "lampExtraHeat": 2,
+      "blScrExtraRh": 100,
+      "rhMax": 85,
+      "tHeatBand": -1,
+      "co2Band": -100,
+      "useBlScr": 1
+    },
+    "physics_mpc": {
+      "horizon": 4,
+      "dt": 900.0,
+      "objective": "economic",
+      "economic": {
+        "fruit_price": 1.6,
+        "dmfm": 0.065,
+        "heating_price": 0.09,
+        "co2_price": 0.3,
+        "elec_price": 0.3,
+        "penalty_weights": [
+          5e-05,
+          0.005,
+          0.0007
+        ],
+        "param_indices": {
+          "floor_area": 46,
+          "heat_power": 108,
+          "co2_capacity": 109,
+          "lamp_power": 172
+        },
+        "fruit_state_index": 25,
+        "cost_input_indices": [
+          0,
+          1,
+          4
+        ]
+      },
+      "climate_bounds": {
+        "co2_ppm": [
+          300,
+          1600
+        ],
+        "air_temp_c": [
+          15,
+          34
+        ],
+        "rh_percent": [
+          50,
+          85
+        ]
+      },
+      "terminal_weight": 0.0
+    }
+  },
+  "season_days": 60,
+  "smoke": false,
+  "grid": {
+    "arms": [
+      "incumbent",
+      "physics_mpc"
+    ],
+    "years": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "mismatch_levels": [
+      0.0,
+      0.025,
+      0.05,
+      0.1,
+      0.15,
+      0.2
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "seasons": 108
+  },
+  "hardware": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "cpu_count": 22,
+    "python": "3.12.3",
+    "threads": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    }
+  }
+}

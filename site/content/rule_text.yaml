@@ -1,0 +1,95 @@
+# Human text for each crop rule. Numbers are NOT written here: each sentence is a
+# template whose {placeholders} are filled from configs/benchmark.yaml by
+# site/build_rules.py. Edit wording here; edit numbers only in the config.
+rules:
+  mean_6d:
+    label: 6-day mean
+    harm: chronic heat or cold; growth and development
+    sentence: >-
+      the {window_days}-day mean air temperature is more than {band} C from the
+      {window_days}-day mean target, where each day's target is {base} C plus
+      {per_1000_j_cm2} C per 1000 J/cm2 of that day's outdoor radiation
+    sources: [koerner_challa_2003, hnt_tomaat_2010]
+  mean_24h:
+    label: 24-hour mean
+    harm: heat; fruit set
+    sentence: the {window_h}-hour mean exceeds {high} C
+    sources: [adams_2001]
+  dose:
+    label: Dose of extremes
+    harm: short extremes
+    sentence: >-
+      the dose in any {window_h} hours exceeds 1. Time below {onset_low} C or above
+      {onset_high} C adds to it with Körner and Challa's exponential weight (exponents
+      {heat_exponent} and {cold_exponent}), 0 at {onset_low} or {onset_high} C and 1 at
+      {limit_low} or {limit_high} C; {full_dose_min} minutes at {limit_low} or
+      {limit_high} C is a full dose
+    sources: [koerner_challa_2003]
+  peak:
+    label: Absolute limits
+    harm: acute damage
+    sentence: >-
+      the air temperature stays below {low} C or above {high} C for {min_minutes}
+      minutes or more in a row
+    sources: [koerner_challa_2003, vanthoor_2011]
+  humid_hours:
+    label: Humid hours
+    harm: grey mould (Botrytis) risk, accumulated
+    sentence: >-
+      the {window_days}-day mean of daily hours above {threshold}% RH exceeds
+      {max_hours_per_day} hours a day
+    sources: [yunis_1994, sentelhas_2008]
+  longest_run:
+    label: Longest humid run
+    harm: one long wet spell
+    sentence: RH stays above {threshold}% for more than {max_hours} hours in a row
+    sources: [koerner_2003]
+
+sources:
+  adams_2001:
+    text: >-
+      Adams, S.R., Cockshull, K.E. and Cave, C.R.J. (2001). Effect of temperature on the
+      growth and development of tomato fruits. Annals of Botany 88:869-877.
+    url: https://doi.org/10.1006/anbo.2001.1524
+  de_koning_1988:
+    text: de Koning, A.N.M. (1988). More efficient use of base load heating with a temperature integrating control programme. Effect on development, growth and production of tomato. Acta Horticulturae 229:233-238.
+    url: https://doi.org/10.17660/ActaHortic.1988.229.22
+  eden_1996:
+    text: >-
+      Eden, M.A., Hill, R.A., Beresford, R. and Stewart, A. (1996). The influence of
+      inoculum concentration, relative humidity, and temperature on infection of
+      greenhouse tomatoes by Botrytis cinerea. Plant Pathology 45:795-806.
+    url: https://doi.org/10.1046/j.1365-3059.1996.d01-163.x
+  hnt_tomaat_2010:
+    text: >-
+      de Gelder, A., Warmenhoven, M. and Grootscholten, M. (2010). Het Nieuwe Telen
+      Tomaat 2010. Wageningen UR Glastuinbouw, GTB-1178.
+    url: https://edepot.wur.nl/247906
+  koerner_2003:
+    text: >-
+      Körner, O. (2003). Crop based climate regimes for energy saving in greenhouse
+      cultivation. PhD thesis, Wageningen University.
+    url: https://edepot.wur.nl/27517
+  koerner_challa_2003:
+    text: >-
+      Körner, O. and Challa, H. (2003). Design for an improved temperature integration
+      concept in greenhouse cultivation. Computers and Electronics in Agriculture
+      39(1):39-59.
+    url: https://doi.org/10.1016/S0168-1699(03)00006-1
+  sentelhas_2008:
+    text: >-
+      Sentelhas, P.C. et al. (2008). Suitability of relative humidity as an estimator of
+      leaf wetness duration. Agricultural and Forest Meteorology 148:392-400.
+    url: https://doi.org/10.1016/j.agrformet.2007.09.011
+  vanthoor_2011:
+    text: >-
+      Vanthoor, B.H.E. et al. (2011). A methodology for model-based greenhouse design:
+      Part 2, description and validation of a tomato yield model. Biosystems
+      Engineering 110:378-395.
+    url: https://doi.org/10.1016/j.biosystemseng.2011.08.005
+  yunis_1994:
+    text: >-
+      Yunis, H., Shtienberg, D., Elad, Y. and Mahrer, Y. (1994). Qualitative approach for
+      modelling outbreaks of grey mould epidemics in non-heated cucumber greenhouses.
+      Crop Protection 13(2):99-104.
+    url: https://doi.org/10.1016/0261-2194(94)90158-9
