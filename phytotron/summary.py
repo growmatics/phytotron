@@ -10,7 +10,7 @@ rules would run, so an older run can be scored under new rules.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Any
 
 import numpy as np
@@ -130,6 +130,31 @@ def _gate_block(records: list[Record], cfg: BenchmarkConfig, arm: str) -> dict[s
     }
 
 
+@dataclass(frozen=True)
+class ArmSummary:
+    """One arm's block of ``summary.json``, in the key order the file has had since 0.1.0.
+
+    ``verdict`` and each ``by_mismatch`` entry are gate blocks (:func:`_gate_block`);
+    ``safety`` holds one :class:`~phytotron.metrics.safety.SafetyProfile` per class as
+    plain data. ``to_json`` is ``asdict``: the keys are the field names, in this order.
+    """
+
+    n_seasons: int
+    n_failed: int
+    seasons_not_started: int
+    net_value_mean: float | None
+    net_value_std: float | None
+    breakdown_mean: dict[str, float | None]
+    online_cost_seconds: float | None
+    solve_success: float | None
+    verdict: dict[str, Any]
+    by_mismatch: dict[str, dict[str, Any] | None]
+    safety: dict[str, dict[str, Any]]
+
+    def to_json(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 def _passes(gate: dict[str, GateCount]) -> dict[str, bool]:
     return {cls: g.passes for cls, g in gate.items()}
 
@@ -195,7 +220,7 @@ def summarize(
         if isinstance(r, FailureRecord)
     ]
     registered = specs_from_record(run_record)
-    arms: dict[str, Any] = {}
+    arms: dict[str, ArmSummary] = {}
     for arm in result.arms():
         model_based = is_model_based(arm, registered)
         verdict_records = _select(every, arm, above_zero=model_based)
@@ -205,31 +230,31 @@ def summarize(
         rows = [
             season_row(r, cfg) for r in every if r.task.arm == arm and isinstance(r, SeasonRecord)
         ]
-        arms[arm] = {
-            "n_seasons": len(completed),
-            "n_failed": result.failed.get(arm, 0),
-            "seasons_not_started": result.not_started.get(arm, 0),
-            "net_value_mean": mean,
-            "net_value_std": std,
-            "breakdown_mean": {
+        arms[arm] = ArmSummary(
+            n_seasons=len(completed),
+            n_failed=result.failed.get(arm, 0),
+            seasons_not_started=result.not_started.get(arm, 0),
+            net_value_mean=mean,
+            net_value_std=std,
+            breakdown_mean={
                 name: _mean([row[name] for row in rows])
                 for name in (*BREAKDOWN_FIELDS, "fruit_growth_kg_fw")
             },
-            "online_cost_seconds": result.decision_time(arm),
-            "solve_success": result.solve_success(arm),
-            "verdict": {
+            online_cost_seconds=result.decision_time(arm),
+            solve_success=result.solve_success(arm),
+            verdict={
                 "seasons": "mismatch above 0, pooled" if model_based else "all",
                 **(_gate_block(verdict_records, cfg, arm) or {"n_seasons": 0}),
             },
-            "by_mismatch": {
+            by_mismatch={
                 f"{level:.3f}": _gate_block(_select(every, arm, mismatch=level), cfg, arm)
                 for level in levels
             },
-            "safety": {
+            safety={
                 cls: asdict(result.safety(arm, cls))
                 for cls in sorted({c for r in completed for c in r.exceedances})
             },
-        }
+        )
     return {
         "record": {**run_record, "n_failed_seasons": len(failures), "failed_seasons": failures},
         "protocol": {
@@ -241,7 +266,7 @@ def summarize(
             "rules_status": cfg.gate.rules_status,
             "rules": {c: cfg.gate.rules(c) for c in cfg.gate.soft_classes},
         },
-        "arms": arms,
+        "arms": {name: a.to_json() for name, a in arms.items()},
         "pareto": _pareto(every, cfg, arms, registered),
         "seasons": sorted(
             (season_row(r, cfg) for r in every if isinstance(r, SeasonRecord)),
@@ -263,7 +288,7 @@ def _mean(values: list[Any]) -> float | None:
 def _pareto(
     records: list[Record],
     cfg: BenchmarkConfig,
-    arms: dict[str, Any],
+    arms: Mapping[str, ArmSummary],
     registered: Mapping[str, ArmSpec] | None = None,
 ) -> dict[str, Any]:
     """Pareto front over the verdict seasons of each arm, gated by the primary gate.
@@ -277,9 +302,7 @@ def _pareto(
     verdict_records = [
         r for r in records if not is_model_based(r.task.arm, registered) or r.task.mismatch > 0.0
     ]
-    passers = [
-        a for a, s in arms.items() if s["verdict"].get(key) and all(s["verdict"][key].values())
-    ]
+    passers = [a for a, s in arms.items() if s.verdict.get(key) and all(s.verdict[key].values())]
     ranked = set(passers) | ({"incumbent"} & set(arms))
     gated = _result([r for r in verdict_records if r.task.arm in ranked], cfg)
     return {

@@ -4,6 +4,7 @@ All notable changes are listed here. Versions follow semantic versioning.
 
 ## Unreleased
 
+- Summary: the per-arm block of `summary.json` is built as an `ArmSummary` dataclass (`phytotron.summary`) and written with the same keys in the same order; the golden summary is byte-identical. The last piece of the stage 2 plan.
 - The 108 per-season records of the run of 10 October 2026, with their climate traces and a manifest of their hashes, are published as an asset of the v0.2.0 release (`phytotron-run-2026-10-10-seasons.zip`, 9 MB); the results pages link to it instead of saying Growmatics holds them.
 - Tests: the byte-for-byte golden summary check runs on the maintainer's machine only; another CPU or numpy build can differ in the last digit of one float, as the CI runner did on 0.2.0. The value comparison with its tolerance is the check that runs everywhere.
 
