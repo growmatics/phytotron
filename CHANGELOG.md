@@ -4,7 +4,7 @@ All notable changes are listed here. Versions follow semantic versioning.
 
 ## Unreleased
 
-Nothing yet.
+- Tests: the byte-for-byte golden summary check runs on the maintainer's machine only; another CPU or numpy build can differ in the last digit of one float, as the CI runner did on 0.2.0. The value comparison with its tolerance is the check that runs everywhere.
 
 ## 0.2.0 (2026-10-11)
 

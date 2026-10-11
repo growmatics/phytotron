@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -95,6 +96,12 @@ def test_golden_run_summarises_to_the_stored_summary() -> None:
     assert _differences(stored, summary) == []
 
 
+@pytest.mark.skipif(
+    bool(os.environ.get("CI")),
+    reason="a refactoring guard for the maintainer's machine: another CPU or numpy build "
+    "can differ in the last digit of a float (seen on the CI runner); the value "
+    "comparison above, with its 1e-12 tolerance, is the cross-machine check",
+)
 def test_golden_summary_text_is_reproduced_byte_for_byte() -> None:
     # The value comparison above tolerates key order and formatting; this one does not,
     # so a move or a rewrite on the summary path cannot change the file silently.
