@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 from pathlib import Path
 from typing import Any
 
@@ -96,19 +95,22 @@ def test_golden_run_summarises_to_the_stored_summary() -> None:
     assert _differences(stored, summary) == []
 
 
-@pytest.mark.skipif(
-    bool(os.environ.get("CI")),
-    reason="a refactoring guard for the maintainer's machine: another CPU or numpy build "
-    "can differ in the last digit of a float (seen on the CI runner); the value "
-    "comparison above, with its 1e-12 tolerance, is the cross-machine check",
-)
-def test_golden_summary_text_is_reproduced_byte_for_byte() -> None:
+def _normalised(text: str) -> str:
+    """The JSON text with every float at 12 significant digits, re-dumped: key order,
+    formatting and every value survive, only the last bits of a float do not."""
+    data = json.loads(text, parse_float=lambda s: f"{float(s):.12g}")
+    return json.dumps(data, indent=1) + "\n"
+
+
+def test_golden_summary_text_is_reproduced_key_for_key_in_order() -> None:
     # The value comparison above tolerates key order and formatting; this one does not,
-    # so a move or a rewrite on the summary path cannot change the file silently.
+    # so a move or a rewrite on the summary path cannot change the file silently. Floats
+    # are compared at 12 significant digits because another CPU's exp or sum can differ
+    # in the last bit (the CI runner did, on one night humidity deficit).
     records = load_records(GOLDEN)
     launch = json.loads((GOLDEN / "run_record.json").read_text())
     text = json.dumps(summarize(records, CFG, launch), indent=1) + "\n"
-    assert text == (GOLDEN / "summary.json").read_text()
+    assert _normalised(text) == _normalised((GOLDEN / "summary.json").read_text())
 
 
 def test_golden_run_exercises_every_rule_kind_and_both_record_paths() -> None:

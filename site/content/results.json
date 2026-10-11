@@ -237,7 +237,7 @@
     ]
   },
   "trace_facts": {
-    "source": "the per-season files with climate traces of this run (not in the repository)",
+    "source": "the per-season files with climate traces of this run, an asset of the v0.2.0 release: https://github.com/growmatics/phytotron/releases/download/v0.2.0/phytotron-run-2026-10-10-seasons.zip",
     "wall_minutes": 136,
     "mpc_seasons_below_limit": 95,
     "mpc_seasons_below_limit_after_day_1": 46,

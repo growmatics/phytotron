@@ -137,6 +137,8 @@ class ArmSummary:
     ``verdict`` and each ``by_mismatch`` entry are gate blocks (:func:`_gate_block`);
     ``safety`` holds one :class:`~phytotron.metrics.safety.SafetyProfile` per class as
     plain data. ``to_json`` is ``asdict``: the keys are the field names, in this order.
+    ``online_cost_seconds`` keeps the stored key's name; the glossary's word for it is
+    decision time.
     """
 
     n_seasons: int
