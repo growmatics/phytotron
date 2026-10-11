@@ -82,6 +82,7 @@ def test_every_number_in_results_prose_is_in_results_json() -> None:
     doc = json.loads(build_results.OUT.read_text())
     known = _numbers(json.dumps(doc)) | _numbers(json.dumps(CFG.raw)) | {15, 34, 50, 85, 300, 1600}
     body = (ROOT / "site" / "content" / "results.md").read_text().split("---", 2)[2]
+    body = re.sub(r"\]\([^)]*\)", "]()", body)  # link targets (release assets) are not prose
     for match in re.finditer(NUMBER, body.replace(MINUS, "-")):
         context = body[max(0, match.start() - 60) : match.end() + 20]
         if "day" in context or "minute" in context or "hour" in context or "%" in context:

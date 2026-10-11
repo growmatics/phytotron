@@ -1,6 +1,6 @@
 # Results: reference controllers, run of 10 October 2026
 
-All numbers on this page are simulated. They come from one run of `phytotron run` on the reference scenario, under the crop-safety rules fixed on 10 October 2026, protocol 1 ([KPIs and the gate](kpis.md)); the last section rescores the same run under protocol 2. The run's `summary.json`, `run_record.json` and `grid.json` are kept in `results/2026-10-10-run-2/` in this repository; the 108 per-season files with the full climate traces are held by Growmatics and will be published separately; until then, rescoring under future rules is done by Growmatics on request. The numbers below that come from those traces, not from the summary, are marked as such.
+All numbers on this page are simulated. They come from one run of `phytotron run` on the reference scenario, under the crop-safety rules fixed on 10 October 2026, protocol 1 ([KPIs and the gate](kpis.md)); the last section rescores the same run under protocol 2. The run's `summary.json`, `run_record.json` and `grid.json` are kept in `results/2026-10-10-run-2/` in this repository; the 108 per-season files with the full climate traces (9 MB zipped, with a manifest of their hashes) are an asset of the v0.2.0 release: [phytotron-run-2026-10-10-seasons.zip](https://github.com/growmatics/phytotron/releases/download/v0.2.0/phytotron-run-2026-10-10-seasons.zip). Unzipped into a run directory, they rescore under any later protocol with the command in the table at the end. The numbers below that come from those traces, not from the summary, are marked as such.
 
 ## Setup
 
@@ -58,7 +58,7 @@ Under protocol 1, a single 15-minute step below 10 C failed a whole season under
 
 ## The same run under protocol 2
 
-Rescored from the stored climate traces with `phytotron run --run-dir runs/full-2 --rescore`, which writes `summary-rescored-<commit>.json`; that file is kept here as `results/2026-10-10-run-2/summary-protocol-2.json`. Nothing was rerun.
+Rescored from the stored climate traces (the release asset above, unzipped as `runs/full-2`) with `phytotron run --run-dir runs/full-2 --rescore`, which writes `summary-rescored-<commit>.json`; that file is kept here as `results/2026-10-10-run-2/summary-protocol-2.json`. Nothing was rerun.
 
 | Controller | Seasons | Peak breaks, protocol 1 → 2 | Dose breaks | Temperature class failures, protocol 1 → 2 | Humidity class failures |
 |---|---|---|---|---|---|

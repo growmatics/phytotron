@@ -25,6 +25,10 @@ from phytotron.records import SeasonRecord, record_from_json
 ROOT = Path(__file__).resolve().parents[1]
 RUN = ROOT / "results" / "2026-10-10-run-2"  # the run the page reports
 OUT = ROOT / "site" / "content" / "results.json"
+TRACES_URL = (  # the release asset with the 108 per-season records of the run
+    "https://github.com/growmatics/phytotron/releases/download/v0.2.0/"
+    "phytotron-run-2026-10-10-seasons.zip"
+)
 
 ARMS = ("incumbent", "physics_mpc")  # the reference controllers, in page order
 ARM_NAMES = {"incumbent": "Incumbent (rule-based)", "physics_mpc": "Economic MPC"}
@@ -187,7 +191,7 @@ def _safety_row(arm: str, block: dict[str, Any]) -> dict[str, Any]:
 
 
 def trace_facts(seasons_dir: Path, cfg: Any) -> dict[str, Any]:
-    """Facts that need the per-season climate traces (held by Growmatics, see the docs).
+    """Facts that need the per-season climate traces (the release asset, see the docs).
 
     The step and the absolute temperature limits come from ``cfg`` (the peak rule), never
     from this file. Failed seasons and records without traces are left out.
@@ -214,7 +218,10 @@ def trace_facts(seasons_dir: Path, cfg: Any) -> dict[str, Any]:
         }
     dip_days = [day for d in dips.values() for day in d["days"]]
     return {
-        "source": "the per-season files with climate traces of this run (not in the repository)",
+        "source": (
+            "the per-season files with climate traces of this run, an asset of the v0.2.0 "
+            f"release: {TRACES_URL}"
+        ),
         "wall_minutes": round((max(finished) - min(started)).total_seconds() / 60),
         "mpc_seasons_below_limit": sum(
             any(v < low for v in (r.climate or {})["temperature"]) for r in mpc

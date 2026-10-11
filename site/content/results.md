@@ -17,7 +17,7 @@ cite_as: "Growmatics (2026). Phytotron reference results, run of 10 October 2026
 
 # Simulated results: two reference controllers under the crop-safety rules
 
-All numbers on this page are simulated. They come from one run of the Phytotron benchmark on its reference scenario, scored under the [crop-safety rules](/phytotron/crop-rules) fixed on 10 October 2026 (protocol 1), and rescored under protocol 2 at the end of the page. The run's summary files are in the repository, so anyone can check every number in the tables. The per-season climate traces are held by Growmatics and will be published separately; the few numbers that come from them say so.
+All numbers on this page are simulated. They come from one run of the Phytotron benchmark on its reference scenario, scored under the [crop-safety rules](/phytotron/crop-rules) fixed on 10 October 2026 (protocol 1), and rescored under protocol 2 at the end of the page. The run's summary files are in the repository, so anyone can check every number in the tables. The 108 per-season files with the full climate traces are published with the code, as an asset of its release ([the season trace files](https://github.com/growmatics/phytotron/releases/download/v0.2.0/phytotron-run-2026-10-10-seasons.zip)); the few numbers on this page that come from them say so.
 
 {{run_setup}}
 
@@ -76,4 +76,4 @@ The incumbent spends 488 hours per season above 85% RH and still breaks no humid
 
 ## Reproduce it
 
-The run directory in the repository holds the summary, the run record (commit, package versions, input-file hashes, thread settings) and the grid. The command that produced it and the command that rescores it under new rules are in the repository's results documentation.
+The run directory in the repository holds the summary, the run record (commit, package versions, input-file hashes, thread settings) and the grid; the per-season climate traces are the release asset linked above. The command that produced the run and the command that rescores the traces under new rules are in the repository's results documentation.
